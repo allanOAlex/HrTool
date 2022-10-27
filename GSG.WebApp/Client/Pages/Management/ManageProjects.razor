@@ -1,0 +1,150 @@
+﻿@page "/Management/ManageProjects/"
+@using GSG.Model.DTO.Filters
+@inject HttpClient Http
+
+<head>
+    <style>
+        .filter {
+            width: 10%;
+            display: grid;
+            column-count: 1;
+            margin: 20px;
+        }
+
+        .filterBttn {
+            width: 50px;
+            height: 50px;
+            margin: 10px;
+            margin-top: 51px;
+        }
+
+        .table-striped > tbody > tr:nth-child(2n+1) > td, .table-striped > tbody > tr:nth-child(2n+1) > th {
+           background-color: #f7f0ff;
+        }
+}
+    </style>
+</head>
+
+
+<PageTitle>Project</PageTitle>
+
+<div >
+    <h1 Style="font-weight-absolute">Project</h1>
+</div>
+
+<!--Input fields for filtering-->
+<div style="display:flex">
+    <div class="filter">
+        <BSLabel style="width=20%">Project: </BSLabel>
+        <BSInput InputType="InputType.Text" placeholder="Project" @bind-Value="project[0]"/>
+    </div>
+        @for (int i = 0; i < filterStatus; i++)
+        {
+            <div class="filter">
+                <BSLabel style="width=20%">Project: </BSLabel>
+                <BSInput InputType="InputType.Text" placeholder="Project" @bind-Value="project[i]"/>
+            </div>
+        }
+        @if(filterStatus != 0)
+        {
+                <div class="filterBttn">
+                <BSButton style="background-color: #ed1c24;" @onclick="FilterMinus"><i class="oi oi-minus" style="color: white" ></i></BSButton>
+            </div>        
+        }
+        @if(filterStatus < 2)
+        {
+            <div class="filterBttn">
+                <BSButton style="background-color: #8522e4;" @onclick="FilterClick"><i class="oi oi-plus" style="color: white" ></i></BSButton>
+            </div>
+        }
+    <div class="filterBttn">
+        <BSButton @onclick="ApplyFilter" style="background-color: #8522e4; color: white">Apply</BSButton>
+    </div>
+    <div class="filterBttn">
+        @if(filtered)
+        {
+            <BSButton style="background-color: #ed1c24; color: white" @onclick="ClearFilter">Clear</BSButton>
+        }
+    </div>
+</div>
+
+
+<BSTable IsStriped=true>
+    <BSTHead>
+        <BSTR Color="BSColor.Dark" style="color: white">
+            <BSTD>Project</BSTD>
+        </BSTR>
+    </BSTHead>
+    <BSTBody>
+        @foreach(ProjectResponse response in _projectResponse)
+        {
+            <BSTR>
+                <BSTD>@response.ProjectId</BSTD>
+                <BSTD>@response.ProjectName</BSTD>
+            </BSTR>
+        }
+    </BSTBody>
+</BSTable>
+
+
+
+@code {
+    private IEnumerable<ProjectResponse> _projectResponse;
+    private ProjectFilterDTO _projectFilterDTO;
+
+    private int filterStatus= 0;
+    private string[] project = new string[3]{string.Empty,string.Empty,string.Empty};
+    private bool filtered;
+
+    public void FilterClick()
+    {
+        if(filterStatus < 3)
+            filterStatus++;
+        Console.WriteLine("+");
+    }
+
+    public void FilterMinus()
+    {
+        if (filterStatus > 0)
+            filterStatus--;
+        Console.WriteLine("-");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _projectFilterDTO = new ProjectFilterDTO();
+        var projectResponse = new List<ProjectResponse>();
+        await base.OnInitializedAsync();
+
+        var keyValueContent = _projectFilterDTO.ToKeyValue();
+        var formUrlEncodedContent = new FormUrlEncodedContent(keyValueContent);
+        var urlEncodedString = await formUrlEncodedContent.ReadAsStringAsync();
+
+        try
+        {
+            var response = await Http.GetFromJsonAsync<ResponseBody<List<ProjectResponse>>>("api/project?" + urlEncodedString);
+            if (response.Success)
+                projectResponse = response.Body;
+        }
+        catch(AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+
+        _projectResponse = projectResponse;
+    }
+
+    private void ApplyFilter()
+    {
+        _projectFilterDTO.ProjectName = new[] { project[0], project[1], project[2] }; //reference this from the razor
+
+        _projectResponse = _projectResponse.Where(row => _projectFilterDTO.ProjectName.Contains(row.ProjectName));
+        filtered = true;
+    }
+
+    private async Task ClearFilter()
+    {
+        await OnInitializedAsync();
+        filtered = false;
+    }
+}

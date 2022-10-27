@@ -1,0 +1,92 @@
+﻿@page "/PopUp/AddEmployee"
+@inject HttpClient Http
+@inject IModalService modal
+
+<h3>AddEmployee</h3>
+
+<div>
+    <div class="filter">
+        <BSLabel style="width=20%">Firstname: </BSLabel >
+        <BSInput style="margin-top: 2px" InputType="InputType.Text" placeholder="First" @bind-Value="firstname" />
+    </div>
+    <div class="filter">
+        <BSLabel style="width=20%">Lastname: </BSLabel >
+        <BSInput style="margin-top: 2px" InputType="InputType.Text" placeholder="Last" @bind-Value="lastname" />
+    </div>
+    <div class="filterBttn">
+        <BSButton @onclick="ApplyFilter" style="background-color: #8522e4; color: white">Search</BSButton>
+    </div>
+</div>
+
+<BSTable IsStriped=true>
+    <BSTHead>
+        <BSTR Color="BSColor.Dark" style="color: white">
+            <BSTD>First</BSTD>
+            <BSTD>Last</BSTD>
+            <BSTD>Employer</BSTD>
+        </BSTR>
+    </BSTHead>
+    <BSTBody>
+        @foreach(EmployeeGridResponse response in _employeeGridResponse)
+        {
+            <BSTR>
+                <BSTD ><a style="color: #8522e4"> @response.FirstName</a></BSTD>
+                <BSTD>@response.FirstName</BSTD>
+                <BSTD>@response.LastName</BSTD>
+                <BSTD>@response.EmployerName</BSTD>
+            </BSTR>
+        }
+    </BSTBody>
+</BSTable>
+
+@code {
+    private IEnumerable<EmployeeGridResponse> _employeeGridResponse = new List<EmployeeGridResponse>();
+    private EmployeeFilterDTO _employeeGridFilterDTO = new EmployeeFilterDTO();
+
+    private string firstname = string.Empty;
+    private string lastname = string.Empty;
+    private string company = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {    
+        await base.OnInitializedAsync();
+        _employeeGridFilterDTO = new EmployeeFilterDTO();
+
+        firstname = string.Empty;
+        lastname = string.Empty;
+        company = string.Empty;
+
+        try
+        {
+            var response = await Http.GetFromJsonAsync<ResponseBody<List<EmployeeGridResponse>>>("api/employee/full");
+            if (response.Success)
+            {
+                _employeeGridResponse = response.Body;
+            }
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    private async void ApplyFilter()
+    {
+
+        _employeeGridFilterDTO.FirstName = new[] { firstname };
+        _employeeGridFilterDTO.LastName = new[] { lastname };
+        _employeeGridFilterDTO.EmployerName = new[] { company }; 
+        
+        string url = HttpUtility.HtmlEncode(_employeeGridFilterDTO);
+        List<EmployeeGridResponse> response = new List<EmployeeGridResponse>();
+        try
+        {
+            response = await Http.GetFromJsonAsync<List<EmployeeGridResponse>>("api/employee/full/"+url);
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+        _employeeGridResponse = response;
+    }
+}

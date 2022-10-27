@@ -1,0 +1,1218 @@
+﻿
+@page "/Employee/{Id:int}"
+
+@inject HttpClient Http
+@inject IJSRuntime js
+@inject IConfiguration Config
+@inject IBlazorStrap blazorStrap
+@inject NavigationManager navigationManager
+@inject IModalService Modal
+@inject IEmployeeService empService
+@inject NotificationService notificationService
+@inject DialogService DialogService
+
+<head>
+	<style>
+		.headerGridWrapper {
+			display: grid;
+			column-count: 2;
+			/*grid-template-columns: 100px 400px 100px;*/
+			/*grid-template-columns: 15% 75% 5%;*/
+			grid-template-columns: 15% 85%;
+			background-color: white;
+		}
+
+		.boxLabel {
+			color: black;
+			border-radius: 2%;
+		}
+
+		.boxRead {
+			color: grey;
+		}
+
+		.profileGrid {
+			display: grid;
+			column-count: 4;
+			grid-template-columns: 20% 20% 20% 20%;
+			grid-gap: 10px;
+		}
+
+		.mainGrid {
+			display: grid;
+			column-count: 2;
+			grid-template-columns: 20% 80%;
+			color: black;
+		}
+
+		.mainBox {
+			column-count: 1;
+			grid-template-columns: 100%;
+			color: black;
+		}
+
+
+	</style>
+</head>
+
+@page "/Employee/Profile"
+
+
+
+<br />
+<div class="container-fluid">
+	<div class="headerGridWrapper">
+		<RadzenCard class="m-1 mt-0">
+			<div class="boxLabel" style="width:20%; max-width:200px;min-width:50px">
+				<img src="not-found.png" style="width:200px" />
+			</div>
+
+		</RadzenCard>
+		<RadzenCard class="m-2 mt-1">
+			<SpinLoader IsLoading="@(@employeeResponse.FirstName == null)" Size="100px">
+					</SpinLoader>
+			<div class="boxLabel">
+				<div class="row">
+					
+					<span>
+						<label class="lblname" style="color:#8522e4;font-size:30px;"><strong>@employeeResponse.FirstName @employeeResponse.LastName</strong></label>
+						<BSButton Class="btn-sm float-right" style="background-color: #8522e4; color: whitesmoke; width: 50px;" Target="editEmployee">Edit</BSButton>
+					</span>
+				</div>
+				<br />
+				<div class="profileGrid">
+					<div class="boxLabel">
+						First Name
+						<div class="boxRead">
+							@employeeResponse.FirstName
+						</div>
+					</div>
+					<div class="boxLabel">
+						Last Name
+						<div class="boxRead">
+							@employeeResponse.LastName
+						</div>
+					</div>
+					<div class="boxLabel">
+						Email
+						<div class="boxRead">
+							@employeeResponse.Email
+						</div>
+					</div>
+					<div class="boxLabel">
+						Phone
+						<div class="boxRead">
+							@employeeResponse.PhoneNumber
+						</div>
+					</div>
+					<div class="boxLabel">
+						Address
+						<div class="boxRead">
+							@employeeResponse.Address
+						</div>
+					</div>
+					<div class="boxLabel">
+						Address2
+						<div class="boxRead">
+							@employeeResponse.Address2
+						</div>
+					</div>
+					<div class="boxLabel">
+						City
+						<div class="boxRead">
+							@employeeResponse.City
+						</div>
+					</div>
+					<div class="boxLabel">
+						State
+						<div class="boxRead">
+							@employeeResponse.EmployeeState
+						</div>
+					</div>
+					<div class="boxLabel">
+						Zip
+						<div class="boxRead">
+							@employeeResponse.Zip
+						</div>
+					</div>
+				</div>
+			</div>
+		</RadzenCard>
+	</div>
+
+	<br />
+
+	<div class="mainGrid">
+		<RadzenCard class="m-1 mt-0">
+			<div class="mainBox">
+				<span>
+					<label class="lblname" style="color:#8522e4;font-size:17px;"><strong>Tags:</strong></label>
+				</span>
+				<br />
+			</div>
+		</RadzenCard>
+		<RadzenCard class="m-1 mt-0">
+			<div class="mainBox">
+
+				<span>
+					<label class="lblname" style="color:#8522e4;font-size:17px;"><strong>Certifications</strong></label>
+				</span>
+				<div class="table-responsive">
+					<table class="table table-bordered">
+						<thead class=" thead-dark" style="background-color: #232B2B; color: white;">
+							<tr>
+								<th>Certification Name</th>
+								<th style="text-align:center">Date Earned</th>
+								<th><BSButton Class="btn-sm float-right" Size="Size.ExtraSmall" style="background-color: #8522e4; color: whitesmoke" Target="addEmpCert">Add Certificate</BSButton></th>
+							</tr>
+						</thead>
+						<tbody>
+							@foreach (EmployeeCertificateProfileResponse cert in _certificates)
+							{
+								<tr>
+									<td>@cert.CertificateName</td>
+									<td style="text-align:center">@cert.AwardedDate.ToString("MM-dd-yyyy")</td>
+									<td>
+										<BSButton Class="btn-sm float-right" Size="Size.ExtraSmall" style="background-color: #DF2525; color: whitesmoke" Target="deleteEmpCert" @onclick="@(() => GetCertificateToDelete(@cert.EmployeeCertificateId))">Delete</BSButton>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+
+				<br />
+				<br />
+
+				<span>
+					<label class="lblname" style="color:#8522e4;font-size:17px;"><strong>Skills</strong></label>
+				</span>
+				<div class="table-responsive">
+					<table class="table table-bordered">
+						<thead class="thead-dark" style="background-color: #232B2B; color: white;">
+							<tr>
+								<th>Skill Name</th>
+								<th><BSButton Class="btn-sm float-right" Size="Size.ExtraSmall" style="background-color: #8522e4; color: whitesmoke" Target="addEmpSkill">Add Skill</BSButton></th>
+							</tr>
+						</thead>
+						<tbody>
+							@foreach (EmployeeSkillProfileResponse skill in _skills)
+							{
+								<tr>
+									<td>@skill.SkillName</td>
+									<td>
+										<BSButton Class="btn-sm float-right" Size="Size.ExtraSmall" style="background-color: #DF2525; color: whitesmoke" Target="deleteEmpSkill" @onclick="@(() => GetSkillToDelete(@skill.EmployeeSkillId))"> Delete</BSButton>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+
+				<br />
+				<br />
+
+				<span>
+					<label class="lblname" style="color:#8522e4;font-size:17px;"><strong>Roles</strong></label>
+				</span>
+				<div class="table-responsive">
+					<table class="table table-bordered">
+						<thead class="thead-dark" style="background-color: #232B2B; color: white;">
+							<tr>
+								<th>Role</th>
+								<th>Company</th>
+								<th style="text-align:center">Start Date</th>
+								<th style="text-align:center">End Date</th>
+								<th><BSButton Class="btn-sm float-right" Size="Size.ExtraSmall" style="background-color: #8522e4; color: whitesmoke" Target="addEmpRole">Add Role</BSButton></th>
+							</tr>
+						</thead>
+						<tbody>
+							@foreach (EmployeeRoleProfileResponse role in _roles)
+							{
+								<tr>
+									<td>@role.RoleName</td>
+									<td>@role.EmployerName</td>
+									<td style="text-align:center">@role.StartDate.ToString("MM-dd-yyyy")</td>
+									@if (role.EndDate != null)
+									{
+										<td style="text-align:center">@role.EndDate.ToString("MM-dd-yyyy")</td>
+									}
+									else
+									{
+										<td style="text-align:center">-</td>
+									}
+									<td>
+										<BSButton Class="btn-sm float-right" Size="Size.ExtraSmall" style="background-color: #DF2525; color: whitesmoke">Delete</BSButton>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+
+				<br />
+				<br />
+
+				<span>
+					<label class="lblname" style="color:#8522e4;font-size:17px;"><strong>Projects History</strong></label>
+				</span>
+				<div class="row">
+					<div class="col-md-12">
+						<table class="table table-bordered">
+							<thead class="thead-dark" style="background-color: #232B2B; color: white;">
+								<tr>
+									<th>Project Name</th>
+									<th style="text-align:center">Start Date</th>
+									<th style="text-align:center">End Date</th>
+									<th><BSButton Class="btn-sm float-right" Size="Size.ExtraSmall" style="background-color: #8522e4; color: whitesmoke" Target="addEmpProject">Add Project</BSButton></th>
+								</tr>
+							</thead>
+							<tbody>
+								@foreach (EmployeeProjectProfileResponse project in _projects)
+								{
+									<tr>
+										<td>@project.ProjectName</td>
+										<td style="text-align:center">@project.StartDate.ToString("MM-dd-yyyy")</td>
+										@if (project.EndDate != null)
+										{
+											<td style="text-align:center">@project.EndDate.ToString("MM-dd-yyyy")</td>
+										}
+										else
+										{
+											<td style="text-align:center">-</td>
+										}
+										<td>
+											<BSButton Class="btn-sm float-right" Size="Size.ExtraSmall" style="background-color: #DF2525; color: whitesmoke">Delete</BSButton>
+										</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				</div>
+
+				<br />
+				<br />
+			</div>
+		</RadzenCard>
+	</div>
+	<br />
+</div>
+
+
+<BSModal DataId="addEmpCert" IsScrollable="true" IsStaticBackdrop="true" IsCentered="true" Size="Size.Medium" @ref="empCertModal">
+	<BSModalHeader style="color:#8522e4;font-size:20px;">Add Certificate</BSModalHeader>
+		<BSModalContent>
+		<EditForm Model="certificateResponse">
+				<DataAnnotationsValidator />
+				<ValidationSummary />
+				<div class="form-group">
+					<BSLabel><strong>Certificate: </strong></BSLabel>
+					<ValidationMessage For="@(() => certificate.CertificateName)" />
+					<InputSelect class="form-control form-select" id="certificate" @bind-Value="CertificateId">
+					<option value="">-- Select Certificate --</option>
+						@foreach (var cert in certificateResponseList)
+						{
+							<option value="@cert.CertificateId">@cert.CertificateName</option>
+						}
+					</InputSelect>
+				</div>
+				<div class="form-group">
+					<BSLabel><strong>Awarded Date: </strong></BSLabel>
+					<RadzenDatePicker @bind-Value=@date DateFormat="d" Change=@(args => OnDateChange(args)) Class="w-100" />
+				</div>
+
+				<br />
+
+			</EditForm>
+	</BSModalContent>
+	<BSModalFooter>
+		<BSButton Class="btn-sm float-right" Color="BSColor.Dark" IsOutlined="true" Target="addEmpCert" @onclick="@(() => NavigateToUrl("/Employee/"+Id))">Cancel</BSButton>
+		<BSButton Class="btn-sm float-right" IsSubmit="true" style="background-color: #8522e4; color: whitesmoke" @onclick="AssignEmployeeCertificate"> Save </BSButton>
+	</BSModalFooter>
+</BSModal>
+
+<BSModal DataId="addEmpSkill" IsScrollable="true" IsStaticBackdrop="true" IsCentered="true" Size="Size.Medium" @ref="empSkillModal">
+	<BSModalHeader style="color:#8522e4;font-size:20px;">Add Skill</BSModalHeader>
+		<BSModalContent>
+		<EditForm Model="skillResponse">
+			<DataAnnotationsValidator />
+			<ValidationSummary />
+			<div class="form-group">
+				<BSLabel><strong>Skill: </strong></BSLabel>
+				<ValidationMessage For="@(() => skill.SkillName)" />
+				<InputSelect class="form-control form-select" id="skill" @bind-Value="SkillId">
+				<option value="">-- Select Skill --</option>
+				@foreach (var skill in skillResponseList)
+				{
+					<option value="@skill.SkillId">@skill.SkillName</option>
+				}
+				</InputSelect>
+			</div>
+		</EditForm>
+	</BSModalContent>
+	<BSModalFooter>
+		<BSButton Class="btn-sm float-right" Color="BSColor.Dark" IsOutlined="true" Target="addEmpSkill" @onclick="@(() => NavigateToUrl("/Employee/"+Id))">Cancel</BSButton>
+		<BSButton Class="btn-sm float-right" IsSubmit="true" style="background-color: #8522e4; color: whitesmoke" @onclick="AssignEmployeeSkill">Save</BSButton>
+	</BSModalFooter>
+</BSModal>
+
+<BSModal DataId="addEmpRole" IsScrollable="true" IsStaticBackdrop="true" IsCentered="true" Size="Size.Medium" @ref="empRoleModal">
+	<BSModalHeader style="color:#8522e4;font-size:20px;">Add Role</BSModalHeader>
+		<BSModalContent>
+		<EditForm Model="roleResponse">
+			<DataAnnotationsValidator />
+			<ValidationSummary />
+			<div class="form-group">
+				<BSLabel><strong>Role: </strong></BSLabel>
+				<ValidationMessage For="@(() => role.RoleName)" />
+				<InputSelect class="form-control form-select" id="role" @bind-Value="RoleId">
+				<option value="">-- Select Role --</option>
+					@foreach (var role in roleResponseList)
+				{
+					<option value="@role.RoleId">@role.RoleName</option>
+				}
+				</InputSelect>
+			</div>
+		</EditForm>
+	</BSModalContent>
+	<BSModalFooter>
+		<BSButton Class="btn-sm float-right"  Color="BSColor.Dark" IsOutlined="true" Target="addEmpRole" @onclick="@(() => NavigateToUrl("/Employee/"+Id))">Cancel</BSButton>
+		<BSButton Class="btn-sm float-right" IsSubmit="true"  style="background-color: #8522e4; color: whitesmoke" @onclick="AssignEmployeeCertificate">Save</BSButton>
+	</BSModalFooter>
+</BSModal>
+
+<BSModal DataId="addEmpProject" IsScrollable="true" IsStaticBackdrop="true" IsCentered="true" Size="Size.Medium" @ref="empProjectModal">
+	<BSModalHeader style="color:#8522e4;font-size:20px;">Add Project</BSModalHeader>
+	<BSModalContent>
+		<EditForm Model="roleResponse">
+			<DataAnnotationsValidator />
+			<ValidationSummary />
+			<div class="form-group">
+				<BSLabel><strong>Project: </strong></BSLabel>
+				<ValidationMessage For="@(() => project.ProjectName)" />
+				<InputSelect class="form-control form-select" id="project" @bind-Value="ProjectId">
+					<option value="">-- Select Role --</option>
+					@foreach (var role in roleResponseList)
+					{
+						<option value="@role.RoleId">@role.RoleName</option>
+					}
+				</InputSelect>
+			</div>
+		</EditForm>
+	</BSModalContent>
+	<BSModalFooter>
+		<BSButton Class="btn-sm float-right"  Color="BSColor.Dark" IsOutlined="true" Target="addEmpRole" @onclick="@(() => NavigateToUrl("/Employee/"+Id))">Cancel</BSButton>
+		<BSButton Class="btn-sm float-right" IsSubmit="true"  style="background-color: #8522e4; color: whitesmoke" @onclick="AssignEmployeeCertificate">Save</BSButton>
+	</BSModalFooter>
+</BSModal>
+
+<BSModal DataId="editEmployee" IsScrollable="true" IsStaticBackdrop="true" IsCentered="true" Size="Size.Medium" @ref="editEmpModal">
+	<BSModalHeader style="color:#8522e4;font-size:20px;"><strong>Edit @employeeResponse.FirstName @employeeResponse.LastName</strong> </BSModalHeader>
+	<BSModalContent>
+		<EditForm id="updateEmployee" Model="@employeeProfileResponse">
+			<DataAnnotationsValidator />
+			<ValidationSummary />
+			<BSLabel><strong>First Name: </strong></BSLabel>
+			<ValidationMessage For="@(() => @employeeResponse.FirstName)" />
+			<InputText id="firstName" @bind-Value="@employeeProfileResponse.FirstName" class="form-control" />
+			<BSLabel><strong>Last Name: </strong></BSLabel>
+			<ValidationMessage For="@(() => @employeeResponse.LastName)" />
+			<InputText id="lastName" @bind-Value="@employeeProfileResponse.LastName" class="form-control" />
+			<BSLabel><strong>Email: </strong></BSLabel>
+			<ValidationMessage For="@(() => @employeeResponse.Email)" />
+			<InputText id="email" @bind-Value="@employeeProfileResponse.Email" class="form-control" />
+			<BSLabel><strong>Phone Number: </strong></BSLabel>
+			<ValidationMessage For="@(() => @employeeResponse.PhoneNumber)" />
+			<InputText id="phone" @bind-Value="@employeeProfileResponse.PhoneNumber" class="form-control" />
+			<BSLabel><strong>Picture Url: </strong></BSLabel>
+			<ValidationMessage For="@(() => @employeeResponse.PictureUrl)" />
+			<InputText id="picUrl" @bind-Value="@employeeProfileResponse.PictureUrl" class="form-control" />
+			<BSLabel><strong>Address: </strong></BSLabel>
+			<ValidationMessage For="@(() => @employeeResponse.Address)" />
+			<InputText id="address" @bind-Value="@employeeProfileResponse.Address" class="form-control" />
+			<BSLabel><strong>Address 2: </strong></BSLabel>
+			<ValidationMessage For="@(() => @employeeResponse.Address2)" />
+			<InputText id="address2" @bind-Value="@employeeProfileResponse.Address2" class="form-control" />
+			<BSLabel><strong>City: </strong></BSLabel>
+			<ValidationMessage For="@(() => @employeeResponse.City)" />
+			<InputText id="city" @bind-Value="@employeeProfileResponse.City" class="form-control" />
+			<BSLabel><strong>Zip: </strong></BSLabel>
+			<ValidationMessage For="@(() => @employeeResponse.Zip)" />
+			<InputText id="zip" @bind-Value="@employeeProfileResponse.Zip" class="form-control" />
+			<BSLabel><strong>State: </strong></BSLabel>
+			<ValidationMessage For="@(() => @employeeResponse.EmployeeState)" />
+			<InputText id="state" @bind-Value="@employeeProfileResponse.EmployeeState" class="form-control" />
+		</EditForm>
+	</BSModalContent>
+	<BSModalFooter>
+		<BSButton Class="btn-sm float-right" Color="BSColor.Dark" IsOutlined="true" Target="editEmployee" @onclick="@(() => NavigateToUrl($"/Employee/{Id}"))">Cancel</BSButton>
+		<BSButton Class="btn-sm float-right" IsSubmit="true" style="background-color: #8522e4; color: whitesmoke" @onclick="UpdateEmployee">Update</BSButton>
+	</BSModalFooter>
+</BSModal>
+
+<BSModal DataId="deleteEmpSkill" IsScrollable="true" IsStaticBackdrop="true" IsCentered="true" Size="Size.Medium" @ref="deleteEmpSkillDialog">
+	<BSModalHeader style="color:#8522e4;font-size:20px;"><strong>Delete Skill</strong></BSModalHeader>
+	<BSModalContent>
+		<strong>Are You Sure?  </strong>
+	</BSModalContent>
+	<BSModalFooter>
+		<BSButton Class="btn-sm float-right" Color="BSColor.Dark" IsOutlined="true" Target="deleteEmpSkill" @onclick="@(() => NavigateToUrl("/Employee/"+Id))">Cancel</BSButton>
+		<BSButton Class="btn-sm float-right" IsSubmit="true" style="background-color: red; color: whitesmoke" @onclick="DeleteEmployeeSkill">Delete</BSButton>
+	</BSModalFooter>
+</BSModal>
+
+<BSModal DataId="deleteEmpCert" IsScrollable="true" IsStaticBackdrop="true" IsCentered="true" Size="Size.Medium" @ref="deleteEmpCertDialog">
+	<BSModalHeader style="color:#8522e4;font-size:20px;"><strong>Delete Certificate</strong></BSModalHeader>
+	<BSModalContent>
+		<strong>Are You Sure?  </strong>
+	</BSModalContent>
+	<BSModalFooter>
+		<BSButton Class="btn-sm float-right" Color="BSColor.Dark" IsOutlined="true" Target="deleteEmpCert" @onclick="@(() => NavigateToUrl("/Employee/"+Id))">Cancel</BSButton>
+		<BSButton Class="btn-sm float-right" IsSubmit="true" style="background-color: red; color: whitesmoke" @onclick="DeleteEmployeeCertificate">Delete</BSButton>
+	</BSModalFooter>
+</BSModal>
+
+@code {
+	[CascadingParameter] public IModalService ModalService { get; set; }
+
+	BSModal modal = new BSModal();
+	BSModal? empCertModal = new BSModal();
+	BSModal? empSkillModal = new BSModal();
+	BSModal? empRoleModal = new BSModal();
+	BSModal? empProjectModal = new BSModal();
+	BSModal? editEmpModal = new BSModal();
+	BSModal? deleteEmpSkillDialog = new BSModal();
+	BSModal? deleteEmpCertDialog = new BSModal();
+
+	[Parameter]
+	public int Id { get; set; }
+
+	public string EmployeeId { get; set; } = "";
+	public string CertificateId { get; set; } = "";
+	public string SkillId { get; set; } = "";
+	public string RoleId { get; set; } = "";
+	public string ProjectId { get; set; } = "";
+
+	public int EmplopyeeSkillId { get; set; }
+	public int SkillID { get; set; }
+	public string SkillName { get; set; }
+
+	public int EmplopyeeCertId { get; set; }
+	public int CertID { get; set; }
+	public string CertName { get; set; }
+
+	DateTime? date = DateTime.Today;
+
+	public static string userMessageSummary = string.Empty;
+	public static string userMessageDetail = string.Empty;
+
+	private bool shouldRender = true;
+
+	#region	Preston Declarations
+
+	string _date = "";
+	string enddate = "";
+	private bool show = true;
+	private bool filtered;
+
+	private string firstname = string.Empty;
+	private string lastname = string.Empty;
+	private string Email = string.Empty;
+	private string Phone = string.Empty;
+	private string Address = string.Empty;
+	private string Address2 = string.Empty;
+	private string City = string.Empty;
+	private string Zip = string.Empty;
+	private string EmployeeState = string.Empty;
+
+
+	#endregion 
+
+	NotificationMessage message = new NotificationMessage
+	{
+			Severity = NotificationSeverity.Success,
+			Summary = "Success!",
+  			Duration = 2000
+	};
+
+	public Employee emp = new();
+	public Certificate certificate = new();
+	public Skill skill = new();
+	public Role role = new();
+	public Project project = new();
+
+	EmployeeRequest empRequest = new();
+	EmployeeUpdateRequest employeeUpdateRequest = new();
+
+	public EmployeeResponse empResponse { get; set; } =  new();
+	public EmployeeResponse employeeResponse = new EmployeeResponse();
+	public EmployeeResponse employeeProfileResponse = new EmployeeResponse();
+	public CertificateResponse certificateResponse = new();
+	public SkillResponse skillResponse = new();
+	public RoleResponse roleResponse = new();
+
+	public EmployeeSkill employeeSkill = new();
+	public EmployeeCertificate employeeCertificate = new();
+	public EmployeeCertificateRequest employeeCartificateRequest = new();
+
+	public EmployeeSkillProfileResponse empSkillProfileResponse = new();
+
+	private IEnumerable<EmployeeCertificateProfileResponse> _certificates = new List<EmployeeCertificateProfileResponse>();
+	private IEnumerable<EmployeeSkillProfileResponse> _skills = new List<EmployeeSkillProfileResponse>();
+	private IEnumerable<EmployeeProjectProfileResponse> _projects = new List<EmployeeProjectProfileResponse>();
+	private IEnumerable<EmployeeRoleProfileResponse> _roles = new List<EmployeeRoleProfileResponse>();
+
+
+	private IEnumerable<EmployeeCertificate> employeeCertificates = new List<EmployeeCertificate>();
+	private IEnumerable<CertificateResponse> certificateResponses = new List<CertificateResponse>();
+
+	private IEnumerable<Certificate> certificatesList = new List<Certificate>();
+	private IEnumerable<CertificateResponse> certificateResponseList = new List<CertificateResponse>();
+	private IEnumerable<Skill> skillsList = new List<Skill>();
+	private IEnumerable<SkillResponse> skillResponseList = new List<SkillResponse>();
+	private IEnumerable<Role> rolesList = new List<Role>();
+	private IEnumerable<RoleResponse> roleResponseList = new List<RoleResponse>();
+	private IEnumerable<Project> projectsList = new List<Project>();
+	private IEnumerable<ProjectResponse> projectResponseList = new List<ProjectResponse>();
+
+
+	private async Task AssignEmployeeCertificate()
+	{
+		var certificateToAdd = await empService.GetCertificateToAdd(int.Parse(CertificateId));
+
+		var employeeCertRequest = new EmployeeCertificateRequest
+		{
+				CertificateId = certificateToAdd.Body.CertificateId,
+				EmployeeId = Id,
+				AwardedDate = date
+
+		};
+
+		var empCertificate = await empService.CreateEmployeeCertificate(employeeCertRequest);
+
+		if (empCertificate.ReponseCode != StatusCodes.Status200OK && empCertificate.Success != true)
+		{
+			userMessageSummary = "Failed";
+			userMessageDetail = empCertificate.Message;
+
+			await HideModal(empCertModal);
+
+			ShowNotification(new NotificationMessage() { Severity = NotificationSeverity.Error, Summary = "Failed", Detail = empCertificate.Message, Duration = 3000 });
+
+			await NavigateToUrl($"/Employee/{Id}");
+
+			await ShowModal(empCertModal);
+
+			return;
+		}
+
+		userMessageDetail = $"Cerificate Added Successfully!";
+
+		await HideModal(empCertModal);
+
+		message.Detail = userMessageDetail;
+
+		ShowNotification(new NotificationMessage() { Severity = NotificationSeverity.Success, Summary = "Sucess!", Detail = empCertificate.Message, Duration = 3000 });
+
+		ShouldRender();
+
+		await NavigateToUrl($"/Employee/{Id}");
+	}
+
+	private async Task AssignEmployeeSkill()
+	{
+		var skillToAdd = await empService.GetSkillToAdd(int.Parse(SkillId));
+
+		var employeeSkillRequest = new EmployeeSkillRequest
+		{
+			EmployeeId = Id,
+			SkillId = skillToAdd.Body.SkillId,
+		};
+
+		var empSkill = await empService.CreateEmployeeSkill(employeeSkillRequest);
+
+		if (empSkill.ReponseCode != StatusCodes.Status200OK && empSkill.Success != true)
+		{
+			userMessageSummary = "Failed";
+			userMessageDetail = $"Error Adding Skill";
+
+			message.Severity = NotificationSeverity.Error;
+			message.Summary = userMessageSummary;
+			message.Detail = userMessageDetail;
+
+			await HideModal(empSkillModal);
+
+			ShowNotification(message);
+
+			await NavigateToUrl($"/Employee/{Id}");
+
+			await ShowModal(empSkillModal);
+
+			return;
+		}
+
+		userMessageDetail = $"Skill Added Successfully!";
+
+		await HideModal(empSkillModal);
+
+		message.Detail = userMessageDetail;
+
+		ShowNotification(message);
+
+		ShouldRender();
+
+		await NavigateToUrl($"/Employee/{Id}");
+	}
+
+	private async Task DeleteEmployeeSkill()
+	{
+		var empSkillToDelete = await empService.GetEmpSkillToDelete(EmplopyeeSkillId);
+
+		var deleteEmpSkillRequest = new EmployeeSkillRequest
+		{
+			EmployeeId = Id,
+			SkillId = empSkillToDelete.Body.SkillId
+
+		};
+
+		var apiResponse = await empService.DeleteEmployeeSkill(deleteEmpSkillRequest.SkillId, deleteEmpSkillRequest.EmployeeId);
+
+
+		if (apiResponse.ReponseCode != StatusCodes.Status200OK && apiResponse.Success != true && apiResponse.Body != "true")
+		{
+			userMessageSummary = "Failed";
+			userMessageDetail = apiResponse.Message;
+
+			await HideModal(empCertModal);
+
+			ShowNotification(new NotificationMessage() { Severity = NotificationSeverity.Error, Summary = "Failed", Detail = apiResponse.Message, Duration = 3000 });
+
+			await NavigateToUrl($"/Employee/{Id}");
+
+			await ShowModal(empCertModal);
+
+			return;
+		}
+
+		userMessageDetail = $"Employee Skill Deleted Successfully!";
+
+		await HideModal(deleteEmpSkillDialog);
+
+		message.Detail = $"Employee Skill Deleted Successfully!";
+
+		await NavigateToUrl($"/Employee/{Id}");
+
+		ShowNotification(message);
+
+		ShouldRender();
+
+	}
+
+	private async Task DeleteEmployeeCertificate()
+	{
+		var empCertToDelete = await empService.GetEmpCertToDelete(EmplopyeeCertId);
+
+		var deleteEmpCertRequest = new EmployeeCertificateRequest
+		{
+			EmployeeId = Id,
+			CertificateId = empCertToDelete.Body.CertificateId
+
+		};
+
+		var apiResponse = await empService.DeleteEmployeeCertificate(deleteEmpCertRequest.CertificateId, deleteEmpCertRequest.EmployeeId);
+
+
+		if (apiResponse.ReponseCode != StatusCodes.Status200OK && apiResponse.Success != true && apiResponse.Body != "true")
+		{
+			userMessageSummary = "Failed";
+			userMessageDetail = apiResponse.Message;
+
+			await HideModal(empCertModal);
+
+			ShowNotification(new NotificationMessage() { Severity = NotificationSeverity.Error, Summary = "Failed", Detail = apiResponse.Message, Duration = 3000 });
+
+			await NavigateToUrl($"/Employee/{Id}");
+
+			await ShowModal(empCertModal);
+
+			return;
+		}
+
+		userMessageDetail = $"Employee Skill Deleted Successfully!";
+
+		await HideModal(deleteEmpCertDialog);
+
+		message.Detail = $"Employee Skill Deleted Successfully!";
+
+		await NavigateToUrl($"/Employee/{Id}");
+
+		ShowNotification(message);
+
+		ShouldRender();
+
+	}
+
+	private async Task UpdateEmployee()
+	{
+		shouldRender = false;
+
+		var empUpdateRequest = new EmployeeRequest
+        {
+            FirstName = employeeResponse.FirstName, 
+            LastName = employeeResponse.LastName,
+			Email = employeeResponse.Email,
+			PhoneNumber = employeeResponse.PhoneNumber,
+            PictureUrl = employeeResponse.PictureUrl,
+            Address = employeeResponse.Address,
+            Address2 = employeeResponse.Address2,
+			City = employeeResponse.City,
+            Zip = employeeResponse.Zip,
+			EmployeeState = employeeResponse.EmployeeState
+
+        };
+
+		var updatedEmployee = await empService.UpdateEmployee(Id, empUpdateRequest);
+
+		if (updatedEmployee.ReponseCode != StatusCodes.Status200OK && updatedEmployee.Success != true)
+		{
+			userMessageSummary = "Failed";
+			userMessageDetail = updatedEmployee.Message;
+
+			await HideModal(editEmpModal);
+
+			ShowNotification(new NotificationMessage() { Severity = NotificationSeverity.Error, Summary = "Failed", Detail = updatedEmployee.Message, Duration = 4000 });
+
+			NavigateToUrl($"/Employee/{Id}");
+
+			await ShowModal(editEmpModal);
+
+			return;
+		}
+
+		userMessageDetail = $"Cerificate Added Successfully!";
+
+		await HideModal(editEmpModal);
+
+		message.Detail = userMessageDetail;
+
+		NavigateToUrl($"/Employee/{Id}");
+
+		ShowNotification(new NotificationMessage() { Severity = NotificationSeverity.Success, Summary = "Sucess!", Detail = updatedEmployee.Message, Duration = 4000 });
+
+	}
+
+	private async Task ShowModal(BSModal modal)
+	{
+		await modal.ShowAsync();
+	}
+
+	private async Task HideModal(BSModal modal)
+	{
+		await modal.HideAsync();
+	}
+
+	private async Task RefreshModal(BSModal modal)
+	{
+		await modal.RefreshAsync();
+	}
+
+	void ShowNotification(NotificationMessage message)
+	{
+		notificationService.Notify(message);
+	}
+
+	private void GetSelectedItem(ChangeEventArgs e)
+	{
+		CertificateId = e.Value.ToString();
+	}
+
+	public void OnDateChange(DateTime? newDateValue)
+	{
+		date = newDateValue;
+
+		Console.WriteLine($"Value changed to {newDateValue}");
+	}
+
+	public async Task GetSkillToDelete(int skillId)
+	{
+		var response = await empService.GetEmpSkillToDelete(skillId);
+		if (response is not null)
+		{
+			SkillID = response.Body.SkillId;
+			EmplopyeeSkillId = response.Body.EmployeeSkillId;
+			await ShowModal(deleteEmpSkillDialog);
+		}
+
+	}
+
+	public async Task GetCertificateToDelete(int certificateId)
+	{
+		var response = await empService.GetEmpCertToDelete(certificateId);
+		if (response is not null)
+		{
+			CertID = response.Body.CertificateId;
+			EmplopyeeCertId = response.Body.EmployeeCertificateId;
+			await ShowModal(deleteEmpCertDialog);
+		}
+
+	}
+
+	protected override bool ShouldRender()
+	{
+		return shouldRender;
+	}
+
+	public async Task NavigateToUrl(string url)
+	{
+		await ReloadProfileInfo();
+		await ReloadCertificates();
+		await ReloadSkills();
+
+		navigationManager.NavigateTo(url);
+	}
+
+	public async Task<EmployeeResponse> ReloadProfileInfo()
+	{
+		var response = await empService.GetEmployeeById(Id);
+
+		employeeResponse = new EmployeeResponse
+		{
+			FirstName = response.Body.FirstName,
+			LastName = response.Body.LastName,
+			Email = response.Body.Email,
+			PhoneNumber = response.Body.PhoneNumber,
+			PictureUrl = response.Body.PictureUrl,
+			Address = response.Body.Address,
+			Address2 = response.Body.Address2,
+			City = response.Body.City,
+			Zip = response.Body.Zip,
+			EmployeeState = response.Body.EmployeeState
+		};
+
+		return employeeResponse;
+	}
+
+	public async Task<IEnumerable<EmployeeCertificateProfileResponse>> ReloadCertificates()
+	{
+		EmployeeCertificateFilterDTO certFilter = new EmployeeCertificateFilterDTO { EmployeeId = new int[] { Id } };
+		List<EmployeeCertificateProfileResponse> certificates = new List<EmployeeCertificateProfileResponse>();
+
+		var keyValueContent = certFilter.ToKeyValue();
+		var formUrlEncodedContent = new FormUrlEncodedContent(keyValueContent);
+		var url = await formUrlEncodedContent.ReadAsStringAsync();
+
+		var response = await empService.GetEmployeeCertificates(url);
+
+		certificates = response.Body;
+
+		_certificates = certificates;
+
+
+		return _certificates;
+	}
+
+	public async Task<IEnumerable<EmployeeSkillProfileResponse>> ReloadSkills()
+	{
+		EmployeeSkillFilterDTO skillFilter = new EmployeeSkillFilterDTO { EmployeeId = new int[] { Id } };
+		List<EmployeeSkillProfileResponse> skills = new List<EmployeeSkillProfileResponse>();
+
+		var keyValueContent = skillFilter.ToKeyValue();
+		var formUrlEncodedContent = new FormUrlEncodedContent(keyValueContent);
+		var url = await formUrlEncodedContent.ReadAsStringAsync();
+
+		var response = await empService.GetEmployeeSkills(url);
+
+		skills = response.Body;
+
+		_skills = skills;
+
+
+		return _skills;
+	}
+
+
+	#region Preston Methods
+
+	async Task HandledateChange(ChangeEventArgs args)
+	{
+		_date = args.Value.ToString();
+	}
+
+	async Task HandledateChanges(ChangeEventArgs args)
+	{
+		enddate = args.Value.ToString();
+	}
+
+	private void FilterMinus()
+	{
+		filtered = true;
+	}
+
+	public void Clear()
+	{
+		firstname = "";
+		lastname = "";
+		lastname = "";
+		Email = "";
+		Phone = "";
+		Address = "";
+		Address2 = "";
+		City = "";
+		Zip = "";
+		EmployeeState = "";
+	}
+
+	public EmployeeResponse employee = new EmployeeResponse
+	{
+			EmployeeId = 4,
+			FirstName = "Jared",
+			LastName = "Freeman",
+			Email = "Something@gmail.com",
+			PhoneNumber = "411",
+			PictureUrl = "images.google.com",
+			Address = "1412 street",
+			Address2 = "apartment",
+			City = "kennesaw",
+			Zip = "30144",
+			EmployeeState = "Ga",
+	};
+
+	private void EditEmployee()
+	{
+		show = false;
+		filtered = true;
+	}
+
+	private void SaveEmpDetails()
+	{
+		show = true;
+		filtered = false;
+	}
+
+	private async void PostEmployee()
+	{
+		EmployeeRequest CreateEmployeerequest = new EmployeeRequest();
+		CreateEmployeerequest = new EmployeeRequest
+			{
+				FirstName = firstname, //reference this from the razor
+				LastName = lastname,
+				Address = Address,
+				Address2 = Address2,
+				City = City,
+				EmployeeState = EmployeeState,
+				Zip = Zip,
+				PhoneNumber = Phone,
+				Email = Email,
+				PictureUrl = "https://www.dreamstime.com/stock-photo-highland-cow-cut-out-scotland-image15227160"
+
+			};
+
+
+		var httpClient = new HttpClient();
+
+		var keyValueContent = employee.ToKeyValue();
+
+		try
+		{
+
+			var response = await Http.PostAsJsonAsync($"api/employee", CreateEmployeerequest);
+			response.EnsureSuccessStatusCode();
+			if (response.IsSuccessStatusCode)
+			{
+				Clear();
+			}
+
+		}
+		catch (AccessTokenNotAvailableException exception)
+		{
+			exception.Redirect();
+		}
+		StateHasChanged();
+	}
+
+	#endregion
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+
+		
+		
+		try
+		{
+			var certResponse = await empService.GetCertificates();
+			if (certResponse.Success)
+			{
+				certificateResponseList = certResponse.Body;
+			}
+			var skillResponse = await empService.GetSkills();
+			if (skillResponse.Success)
+			{
+				skillResponseList = skillResponse.Body;
+			}
+			var roleResponse = await empService.GetRoles();
+			if (roleResponse.Success)
+			{
+				roleResponseList = roleResponse.Body;
+			}
+			var projectResponse = await empService.GetProjects();
+			if (projectResponse.Success)
+			{
+				projectResponseList = projectResponse.Body;
+			}
+		}
+		catch (Exception ex)
+		{
+			throw new Exception($"Failed to retrieve data : | {ex.Message.ToString()}");
+		}
+		
+		List<EmployeeCertificateProfileResponse> certificates = new List<EmployeeCertificateProfileResponse>();
+		List<EmployeeSkillProfileResponse> skills = new List<EmployeeSkillProfileResponse>();
+		List<EmployeeRoleProfileResponse> roles = new List<EmployeeRoleProfileResponse>();
+		List<EmployeeProjectProfileResponse> projects = new List<EmployeeProjectProfileResponse>();
+
+		//string urlEmp = HttpUtility.HtmlEncode(new EmployeeFilterDTO { LastName = new string[] { "Freeman" } });
+		try
+		{
+			var response = await empService.GetEmployeeById(Id);
+			if (response.Success)
+			{
+				employeeResponse = response.Body;
+			}
+
+			//Proile Info
+			employeeProfileResponse = new EmployeeResponse
+			{
+				FirstName = employeeResponse.FirstName,
+				LastName = employeeResponse.LastName,
+				Email = employeeResponse.Email,
+				PhoneNumber = employeeResponse.PhoneNumber,
+				PictureUrl = employeeResponse.PictureUrl,
+				Address = employeeResponse.Address,
+				Address2 = employeeResponse.Address2,
+				City = employeeResponse.City,
+				Zip = employeeResponse.Zip,
+				EmployeeState = employeeResponse.EmployeeState
+			};
+				
+		} 
+		catch (AccessTokenNotAvailableException exception)
+		{
+			exception.Redirect();
+		}
+
+
+		{
+			try
+			{
+				//var response = await Http.GetFromJsonAsync<ResponseBody<EmployeeResponse>>($"api/employee/{Id}");
+				//if (response.Success)
+				//	employee = response.Body;
+			}
+			catch (AccessTokenNotAvailableException exception)
+			{
+				exception.Redirect();
+			}
+		}
+
+		EmployeeCertificateFilterDTO certFilter = new EmployeeCertificateFilterDTO { EmployeeId = new int[] { employeeResponse.EmployeeId } };
+		EmployeeProjectFilterDTO projFilter = new EmployeeProjectFilterDTO { EmployeeId = new int[] { employeeResponse.EmployeeId } };
+		EmployeeRoleFilterDTO roleFilter = new EmployeeRoleFilterDTO { EmployeeId = new int[] { employeeResponse.EmployeeId } };
+		EmployeeSkillFilterDTO skillFilter = new EmployeeSkillFilterDTO { EmployeeId = new int[] { employeeResponse.EmployeeId } };
+
+
+		{
+			var keyValueContent = certFilter.ToKeyValue();
+			var formUrlEncodedContent = new FormUrlEncodedContent(keyValueContent);
+			var url = await formUrlEncodedContent.ReadAsStringAsync();
+			{
+				try
+				{
+					var response = await empService.GetEmployeeCertificates(url);
+					if( response.Success )
+						certificates = response.Body;
+				}
+				catch (AccessTokenNotAvailableException exception)
+				{
+					exception.Redirect();
+				}
+			}
+
+			keyValueContent = skillFilter.ToKeyValue();
+			formUrlEncodedContent = new FormUrlEncodedContent(keyValueContent);
+			url = await formUrlEncodedContent.ReadAsStringAsync();
+			{
+				try
+				{
+					var response = await empService.GetEmployeeSkills(url);
+					if (response.Success)
+						skills = response.Body;
+				}
+				catch (AccessTokenNotAvailableException exception)
+				{
+					exception.Redirect();
+				}
+			}
+
+			keyValueContent = roleFilter.ToKeyValue();
+			formUrlEncodedContent = new FormUrlEncodedContent(keyValueContent);
+			url = await formUrlEncodedContent.ReadAsStringAsync();
+			{
+				try
+				{
+					Console.WriteLine(url);
+					var response = await Http.GetFromJsonAsync<ResponseBody<List<EmployeeRoleProfileResponse>>>($"api/employeerole?{url}");
+					if (response.Success)
+						roles = response.Body;
+				}
+				catch (AccessTokenNotAvailableException exception)
+				{
+					exception.Redirect();
+				}
+			}
+			
+			keyValueContent = projFilter.ToKeyValue();
+			formUrlEncodedContent = new FormUrlEncodedContent(keyValueContent);
+			url = await formUrlEncodedContent.ReadAsStringAsync();
+			{
+				try
+				{
+					var response = await Http.GetFromJsonAsync<ResponseBody<List<EmployeeProjectProfileResponse>>>($"api/employeeproject?{url}");
+					if (response.Success)
+						projects = response.Body;
+				}
+				catch (AccessTokenNotAvailableException exception)
+				{
+					exception.Redirect();
+				}
+			}
+
+			
+
+		}
+
+		if (certificates.Count() < 1)
+			certificates.Add(new EmployeeCertificateProfileResponse());
+
+		if (projects.Count() < 1)
+			projects.Add(new EmployeeProjectProfileResponse());
+
+		if (roles.Count() < 1)
+			roles.Add(new EmployeeRoleProfileResponse());
+
+		if (skills.Count() < 1)
+			skills.Add(new EmployeeSkillProfileResponse());
+
+		_certificates = certificates;
+		_projects = projects;
+		_roles = roles;
+		_skills = skills;
+
+		
+
+	}
+
+
+}

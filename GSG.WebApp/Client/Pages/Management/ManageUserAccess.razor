@@ -1,0 +1,118 @@
+﻿@page "/Management/ManageUserAccess/"
+@using GSG.Model.DTO.Filters
+
+@*<head>
+    <style>
+        .filter {
+            width: 10%;
+            display: grid;
+            column-count: 1;
+            margin: 20px;
+        }
+
+        .filterBttn {
+            width: 50px;
+            height: 50px;
+            margin: 10px;
+            margin-top: 51px;
+        }
+
+        .table-striped > tbody > tr:nth-child(2n+1) > td, .table-striped > tbody > tr:nth-child(2n+1) > th {
+           background-color: #f7f0ff;
+        }
+}
+    </style>
+</head>
+
+
+<PageTitle>ManageUserAccess</PageTitle>
+
+<div >
+    <h1 Style="font-weight-absolute">Employees Grid</h1>
+</div>
+
+<!--Input fields for filtering-->
+<div style="display:flex">
+    <div class="filter">
+        <BSLabel style="width=20%">Name: </BSLabel >
+        <BSInput InputType="InputType.Text" placeholder="name" Value="@("")" />
+    </div>
+    <div class="filter">
+        <BSLabel style="width=20%">Company: </BSLabel>
+        <BSInput InputType="InputType.Text" placeholder="Company" Value="@("")"/>
+    </div>
+    <div class="filter">
+        <BSLabel style="width=20%">UserAccess: </BSLabel>
+        <BSInput InputType="InputType.Text" placeholder="UserAccess" Value="@("")"/>
+    </div>
+        @for (int i = 0; i < userAccessFilterStatus; i++)
+        {
+            <div class="filter">
+                <BSLabel style="width=20%">UserAccess: </BSLabel>
+                <BSInput InputType="InputType.Text" placeholder="UserAccess" Value="@("")"/>
+            </div>
+        }
+        @if(userAccessFilterStatus != 0)
+        {
+                <div class="filterBttn">
+                <BSButton style="background-color: #ed1c24;" @onclick="FilterMinus"><i class="oi oi-minus" style="color: white" ></i></BSButton>
+            </div>        
+        }
+        @if(userAccessFilterStatus < 2)
+        {
+            <div class="filterBttn">
+                <BSButton style="background-color: #8522e4;" @onclick="FilterClick"><i class="oi oi-plus" style="color: white" ></i></BSButton>
+            </div>
+        }
+    <div class="filterBttn">
+        <BSButton @onclick="ApplyFilter" style="background-color: #8522e4; color: white">Apply</BSButton>
+    </div>
+</div>
+
+
+<BSTable IsStriped=true>
+    <BSTHead>
+        <BSTR Color="BSColor.Dark" style="color: white">
+            <BSTD>ID</BSTD>
+            <BSTD>First</BSTD>
+            <BSTD>Last</BSTD>
+            <BSTD>Role</BSTD>
+            <BSButton style="background-color: #8522e4;" @onclick="FilterClick"><i class="oi oi-plus" style="color: white" ></i></BSButton>
+        </BSTR>
+    </BSTHead>
+    <BSTBody>
+        @foreach(UserAccess response in _employeeGridResponse)
+        {
+            <BSTR>
+                <BSTD ><a href="/Employee/Profile" style="color: #8522e4"> @response.FirstName</a></BSTD>
+                <BSTD>@response.LastName</BSTD>
+                <BSTD>@response.RoleName</BSTD>
+            </BSTR>
+        }
+    </BSTBody>
+</BSTable>
+
+    protected override async Task OnInitializedAsync()
+    {
+        resultIterator = 0;
+        _employeeGridFilterDTO = new EmployeeGridFilterDTO();
+        var UserAccess = new List<UserAccess>();
+        await base.OnInitializedAsync();
+        for (int i = 0; i < 5; i++)
+        {
+            UserAccessResponse.Add(new UserAccessResponse
+            {
+                UserAccessName = $"UserAccess{i}"
+                UserAccessId = i
+            });
+        }
+        _userAccessResponse = UserAccess;
+        resultCount = _userAccessResponse.Count();
+    }
+
+
+    private void ResultIterate()
+    {
+        resultIterator++;
+    }
+}*@

@@ -1,0 +1,140 @@
+﻿@page "/Management/ManageCertificates"
+@using GSG.Model.DTO.Filters
+@inject HttpClient Http
+
+<head>
+    <style>
+        .filter {
+            width: 10%;
+            display: grid;
+            column-count: 1;
+            margin: 20px;
+        }
+
+        .filterBttn {
+            width: 50px;
+            height: 50px;
+            margin: 10px;
+            margin-top: 51px;
+        }
+
+        .table-striped > tbody > tr:nth-child(2n+1) > td, .table-striped > tbody > tr:nth-child(2n+1) > th {
+           background-color: #f7f0ff;
+        }
+}
+    </style>
+</head>
+
+
+<PageTitle>Manage Certificates</PageTitle>
+<div>
+    <h1 Style="font-weight-absolute">Manage Certificates</h1>
+</div>
+
+<!--Input fields for filtering-->
+<div style="display:flex">
+    <div class="filter">
+        <BSLabel style="width=20%">Certificate: </BSLabel>
+        <BSInput InputType="InputType.Text" placeholder="Certificate" Value="@("")"/>
+    </div>
+        @for (int i = 0; i < certFilterStatus; i++)
+        {
+            <div class="filter">
+                <BSLabel style="width=20%">Certificate: </BSLabel>
+                <BSInput InputType="InputType.Text" placeholder="Certificate" @bind-Value="certs[i]"/>
+            </div>
+        }
+        @if(certFilterStatus != 0)
+        {
+                <div class="filterBttn">
+                <BSButton style="background-color: #ed1c24;" @onclick="FilterMinus"><i class="oi oi-minus" style="color: white" ></i></BSButton>
+            </div>        
+        }
+        @if(certFilterStatus < 2)
+        {
+            <div class="filterBttn">
+                <BSButton style="background-color: #8522e4;" @onclick="FilterClick"><i class="oi oi-plus" style="color: white" ></i></BSButton>
+            </div>
+        }
+    <div class="filterBttn">
+        <BSButton @onclick="ApplyFilter" style="background-color: #8522e4; color: white">Apply</BSButton>
+    </div>
+</div>
+
+<BSTable IsStriped=true>
+    <BSTHead>
+        <BSTR Color="BSColor.Dark" style="color: white">
+            <BSTD>First</BSTD>
+            <BSTD>Last</BSTD>
+            <BSTD>Certificate</BSTD>
+            <BSButton style="background-color: #8522e4;" @onclick="FilterClick"><i class="oi oi-plus" style="color: white" ></i></BSButton>
+        </BSTR>
+    </BSTHead>
+    <BSTBody>
+        @foreach(CertificateResponse response in _certificateResponse)
+        {
+            <BSTR>
+                <BSTD ><a href="/Employee/Profile" style="color: #8522e4"> @response.FirstName</a></BSTD>
+                <BSTD>@response.LastName</BSTD>
+                <BSTD>@response.CertificateName</BSTD>
+            </BSTR>
+        }
+    </BSTBody>
+</BSTable>
+
+@code {
+    private IEnumerable<CertificateResponse> _certificateResponse;
+    private CertificateFilterDTO _certificateFilterDTO;
+    private string[] certs = new string[3];
+    private bool filtered = false;
+
+    private int certFilterStatus = 0;
+
+    public void FilterClick()
+    {
+        if(certFilterStatus < 3)
+            certFilterStatus++;
+        Console.WriteLine("+");
+    }
+
+    public void FilterMinus()
+    {
+        if (certFilterStatus > 0)
+            certFilterStatus--;
+        Console.WriteLine("-");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _certificateFilterDTO = new CertificateFilterDTO();
+        var certificateResponse = new List<CertificateResponse>();
+        await base.OnInitializedAsync();
+        filtered = false;
+        
+
+        var keyValueContent = _certificateFilterDTO.ToKeyValue();
+        var formUrlEncodedContent = new FormUrlEncodedContent(keyValueContent);
+        var urlEncodedString = await formUrlEncodedContent.ReadAsStringAsync();
+
+        try
+        {
+            Console.WriteLine(urlEncodedString);
+            var response = await Http.GetFromJsonAsync<ResponseBody<List<CertificateResponse>>>("api/certificate?" + urlEncodedString);
+            if(response.Success)
+                certificateResponse = response.Body;
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+        _certificateResponse = certificateResponse;
+    }
+
+    private void ApplyFilter()
+    {
+        _certificateFilterDTO.CertificateName = certs; //reference this from the razor
+
+        _certificateResponse = _certificateResponse.Where(row => _certificateFilterDTO.CertificateName.Contains(row.CertificateName));
+    }
+
+}

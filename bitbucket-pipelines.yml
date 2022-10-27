@@ -1,0 +1,83 @@
+      # Cake Bitbucket Pipeline
+
+      pipelines:
+        default:
+          - step:
+              image: mcr.microsoft.com/dotnet/sdk:6.0
+              name: Build and Run Tests
+              script:
+                - dotnet restore
+                - dotnet new tool-manifest --force
+                - dotnet tool install Cake.Tool
+                - ./build.sh
+          - step:
+              name: Build UI 
+              image: mcr.microsoft.com/dotnet/sdk:6.0
+              services:
+                - docker
+              script:
+              - dotnet restore
+              - dotnet build GSG.WebApp/Client/GSG.WebApp.Client.csproj -c Release -o app/build
+              - dotnet publish GSG.WebApp/Client/GSG.WebApp.Client.csproj -c Release -o app/publish
+        branches:
+          master:
+            - step:
+                image: mcr.microsoft.com/dotnet/sdk:6.0
+                name: Build and Run Tests
+                script:
+                  - dotnet restore
+                  - dotnet new tool-manifest --force
+                  - dotnet tool install Cake.Tool
+                  - ./build.sh
+            - step:
+                name: Build Docker Image
+                image: atlassian/pipelines-awscli
+                services:
+                  - docker
+                script:
+                  - docker build -t hrtool-dev -f API/GSG.API/Dockerfile .
+                  - pipe: atlassian/aws-ecr-push-image:1.5.0
+                    variables:
+                      AWS_ACCESS_KEY_ID: $AWS_KEY
+                      AWS_SECRET_ACCESS_KEY: $AWS_SECRET
+                      AWS_DEFAULT_REGION: us-east-1
+                      IMAGE_NAME: hrtool-dev
+                      TAGS: "latest $BITBUCKET_BUILD_NUMBER"
+                  - export AWS_ACCESS_KEY_ID=$AWS_KEY
+                  - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET
+                  - aws ecs update-service --cluster "development-hrtool-ecs" --service "development-hrtool-ecs-service" --desired-count 0 --region $AWS_REGION
+                  - aws ecs list-tasks --cluster "development-hrtool-ecs" --service-name "development-hrtool-ecs-service" --region $AWS_REGION | jq -r '.taskArns[]' | xargs -r aws ecs stop-task --cluster "development-hrtool-ecs" --task --region $AWS_REGION
+                  - aws ecs update-service --cluster "development-hrtool-ecs" --service "development-hrtool-ecs-service" --task-definition "development-hrtool-family" --desired-count 1 --region $AWS_REGION
+
+            - step:
+                name: Build UI 
+                image: mcr.microsoft.com/dotnet/sdk:6.0
+                services:
+                  - docker
+                script:
+                - dotnet restore
+                - dotnet build GSG.WebApp/Client/GSG.WebApp.Client.csproj -c Release -o app/build
+                - dotnet publish GSG.WebApp/Client/GSG.WebApp.Client.csproj -c Release -o app/publish
+                - ls app
+                artifacts: # defining the artifacts to be passed to each future step.
+                  - app/**
+            - step:
+                name: Build UI Image
+                image: atlassian/pipelines-awscli
+                services:
+                  - docker
+                script:
+                  - ls app/
+                  - docker build -t hrtool-dev-ui -f GSG.WebApp/Dockerfile .
+                  - pipe: atlassian/aws-ecr-push-image:1.5.0
+                    variables:
+                      AWS_ACCESS_KEY_ID: $AWS_KEY
+                      AWS_SECRET_ACCESS_KEY: $AWS_SECRET
+                      AWS_DEFAULT_REGION: us-east-1
+                      IMAGE_NAME: hrtool-dev-ui
+                      TAGS: "latest $BITBUCKET_BUILD_NUMBER"
+                  - export AWS_ACCESS_KEY_ID=$AWS_KEY
+                  - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET
+                  - aws ecs update-service --cluster "development-hrtool-ecs" --service "development-hrtool-ui-ecs-service" --desired-count 0 --region $AWS_REGION
+                  - aws ecs list-tasks --cluster "development-hrtool-ecs" --service-name "development-hrtool-ui-ecs-service" --region $AWS_REGION | jq -r '.taskArns[]' | xargs -r aws ecs stop-task --cluster "development-hrtool-ecs" --task --region $AWS_REGION
+                  - aws ecs update-service --cluster "development-hrtool-ecs" --service "development-hrtool-ui-ecs-service" --task-definition "development-hrtool-ui-family" --desired-count 1 --region $AWS_REGION

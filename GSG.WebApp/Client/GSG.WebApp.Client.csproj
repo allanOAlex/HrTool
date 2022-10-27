@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+	
+	<!--<ItemGroup>
+		<KnownRuntimePack Update="@(KnownRuntimePack)">
+			<LatestRuntimeFrameworkVersion Condition="'%(TargetFramework)' == 'net6.0'">6.0.9</LatestRuntimeFrameworkVersion>
+		</KnownRuntimePack>
+	</ItemGroup>-->
+	
+  <ItemGroup>
+    <PackageReference Include="Blazored.Modal" Version="4.1.0" />
+    <PackageReference Include="BlazorPro.Spinkit" Version="1.2.0" />
+    <PackageReference Include="BlazorStrap" Version="5.0.106" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.7" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="6.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
+    <PackageReference Include="popper.js" Version="1.16.1" />
+    <PackageReference Include="Radzen.Blazor" Version="3.19.12" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TrimmerRootAssembly Include="Microsoft.Authentication.WebAssembly.Msal" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\GSG.Model\GSG.Model.csproj" />
+    <ProjectReference Include="..\..\GSG.Shared\GSG.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

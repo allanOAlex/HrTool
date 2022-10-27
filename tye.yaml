@@ -1,0 +1,31 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+#
+# when you've given us a try, we'd love to know what you think:
+#    https://aka.ms/AA7q20u
+#
+name: internalhrtool
+services:
+- name: client
+  project: GSG.WebApp/Client/GSG.WebApp.Client.csproj
+  bindings:
+  - port: 51184
+    protocol: https
+- name: server
+  project: API/GSG.API/GSG.API.csproj
+  bindings:
+  - port: 60894
+    protocol: https
+ingress:
+  - name: ingress
+    bindings:
+      - port: 8081
+        protocol: https
+    rules:
+      - path: /api
+        preservePath: true
+        service: server
+      - path: /swagger
+        preservePath: true
+        service: server
+      - service: client

@@ -1,0 +1,115 @@
+﻿@page "/Management/ManageEmployers"
+@using GSG.Model.DTO.Filters
+@inject HttpClient Http
+
+<head>
+    <style>
+        .filter {
+            width: 10%;
+            display: grid;
+            column-count: 1;
+            margin: 20px;
+        }
+
+        .filterBttn {
+            width: 50px;
+            height: 50px;
+            margin: 10px;
+            margin-top: 51px;
+        }
+
+        .table-striped > tbody > tr:nth-child(2n+1) > td, .table-striped > tbody > tr:nth-child(2n+1) > th {
+           background-color: #f7f0ff;
+        }
+}
+    </style>
+</head>
+
+
+<PageTitle>Manage Employers</PageTitle>
+<div>
+    <h1 Style="font-weight-absolute">Manage Employers</h1>
+</div>
+
+<!--Input fields for filtering-->
+<div style="display:flex">
+    <div class="filter">
+        <BSLabel style="width=20%">Company: </BSLabel >
+        <BSInput InputType="InputType.Text" placeholder="Company Name" @bind-Value="employer"/>
+    </div>
+    <div class="filter">
+        <BSLabel style="width=20%">THH: </BSLabel>
+        <BSInput InputType="InputType.Text" placeholder="true/false" @bind-Value="isTHH"/>
+    </div>
+    <div class="filterBttn">
+        @if(filtered)
+        {
+            <BSButton style="background-color: #ed1c24; color: white" @onclick="ClearFilter">Clear</BSButton>
+        }
+    </div>
+</div>
+
+<BSTable IsStriped=true>
+    <BSTHead>
+        <BSTR Color="BSColor.Dark" style="color: white">
+            <BSTD>ID</BSTD>
+            <BSTD>Employer</BSTD>
+        </BSTR>
+    </BSTHead>
+    <BSTBody>
+        @foreach(EmployerResponse response in _employerResponse)
+        {
+            <BSTR>
+                <BSTD>@response.EmployerName</BSTD>
+            </BSTR>
+        }
+    </BSTBody>
+</BSTable>
+
+@code {
+    private IEnumerable<EmployerResponse> _employerResponse;
+    private EmployerFilterDTO _employerFilterDTO;
+
+    private string employer = string.Empty;
+    private string isTHH = string.Empty;
+    private bool filtered;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _employerFilterDTO = new EmployerFilterDTO();
+        var employerResponse = new List<EmployerResponse>();
+        await base.OnInitializedAsync();
+        filtered = false;
+        
+        var keyValueContent = _employerFilterDTO.ToKeyValue();
+        var formUrlEncodedContent = new FormUrlEncodedContent(keyValueContent);
+        var urlEncodedString = await formUrlEncodedContent.ReadAsStringAsync();
+
+        try
+        {
+            var response = await Http.GetFromJsonAsync<ResponseBody<List<EmployerResponse>>>("api/employer?" + urlEncodedString);
+            if(response.Success)
+                employerResponse = response.Body;
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+
+        _employerResponse = employerResponse;
+    }
+
+    private void ApplyFilter()
+    {
+        _employerFilterDTO.EmployerName = new[] { employer }; //reference this from the razor
+
+        _employerResponse = _employerResponse.Where(row => _employerFilterDTO.EmployerName.Contains(row.EmployerName));
+        filtered = true;
+    }
+
+    private async Task ClearFilter()
+    {
+        await OnInitializedAsync();
+        filtered = false;
+    }
+}

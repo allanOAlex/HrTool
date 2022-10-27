@@ -1,0 +1,169 @@
+-- Database: InternalHRTool
+
+-- DROP DATABASE IF EXISTS "InternalHRTool";
+
+CREATE DATABASE "InternalHRTool"
+    WITH
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'English_United States.1252'
+    LC_CTYPE = 'English_United States.1252'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1;
+	
+	
+	
+	-- Employee table
+CREATE TABLE Employee(
+	EmployeeId serial PRIMARY KEY,
+	FirstName varchar(50) NOT NULL,
+	LastName varchar(50) NOT NULL,
+	Email varchar(200) NOT NULL,
+	PhoneNumber varchar(10) NOT NULL,
+	PictureUrl varchar(255) NOT NULL,
+	Address varchar(50) NOT NULL,
+	Address2 varchar(50) NOT NULL,
+	City varchar(50) NOT NULL,
+	Zip varchar(50) NOT NULL,
+	EmployeeState varchar(2) NOT NULL,
+	Created date NOT NULL,
+	Updated date NOT NULL,
+	CreatedBy varchar(50) NOT NULL,
+	RowVer timestamp NOT NULL 
+);
+-- create projects table
+CREATE TABLE Project(
+	ProjectId SERIAL PRIMARY KEY NOT NULL,
+	ProjectName varchar(50) NOT NULL,
+	StartDate date NOT NULL,
+	EndDate date,
+	Created date NOT NULL,
+	Updated date NOT NULL,
+	CreatedBy varchar(50) NOT NULL,
+	RowVer timestamp NOT NULL
+);
+ -- Employee Project Table
+CREATE TABLE EmployeeProject(
+	EmployeeProjectId serial PRIMARY KEY NOT NULL,
+	EmployeeId int,
+	ProjectId int,
+	StartDate date NOT NULL,
+	EndDate date,
+	Created date NOT NULL,
+	Updated date NOT NULL,
+	CreatedBy varchar(50) NOT NULL,
+	RowVer timestamp NOT NULL, 
+	CONSTRAINT FK_EmployeeId FOREIGN KEY (EmployeeId)
+	REFERENCES Employee(EmployeeId),
+	CONSTRAINT FK_ProjectId FOREIGN KEY (ProjectId)
+	REFERENCES Project (ProjectId)
+);
+--Create certificates table
+CREATE TABLE Certificate(
+	CertificateId serial PRIMARY KEY,
+	CertificateName varchar(50) NOT NULL,
+	AwardedDate date NOT NULL,
+	Created date NOT NULL,
+	Updated date NOT NULL,
+	CreatedBy varchar(50) NOT NULL,
+	RowVer timestamp NOT NULL
+);
+--Creat EmployeeCertificate table
+CREATE TABLE EmployeeCertificate(
+	EmployeeCertificateId int PRIMARY KEY,
+	CertificateId int,
+	EmployeeId int,
+	Created date NOT NULL,
+	Updated date NOT NULL,
+	CreatedBy varchar(50) NOT NULL,
+	RowVer timestamp NOT NULL,
+	CONSTRAINT FK_EmployeeId FOREIGN KEY (EmployeeId)
+	REFERENCES Employee(EmployeeId),
+	CONSTRAINT FK_CertificateId FOREIGN KEY (CertificateId)
+	REFERENCES Certificate (CertificateId)
+);	
+	
+--Create a role table
+CREATE TABLE RoleDescription(
+	RoleId SERIAL PRIMARY KEY,
+	RoleName varchar (50) NOT NULL,
+	NumberOfRoles int NOT NULL,
+	Created DATE NOT NULL,
+	Updated DATE NOT NULL,
+	CreatedBy varchar (50) NOT NULL,
+	RowVer timestamp NOT NULL
+);	
+--create security role table
+CREATE TABLE SecurityRole(
+	SecurityId SERIAL PRIMARY KEY,
+	SecurityName varchar (50) NOT NULL,
+	Created DATE NOT NULL,
+	Updated DATE NOT NULL,
+	CreatedBy varchar (50) NOT NULL,
+	RowVer timestamp NOT NULL
+);
+--create employer table
+CREATE TABLE Employer(
+	EmployerId SERIAL PRIMARY KEY,
+	EmployerName varchar (50) NOT NULL,
+	EmployeeId int,
+	Created DATE NOT NULL,
+	Updated DATE NOT NULL,
+	CreateBy varchar (50) NOT NULL,
+	RowVer timestamp NOT NULL,
+	CONSTRAINT FK_EmployeeId FOREIGN KEY (EmployeeId)
+	REFERENCES Employee(EmployeeId)
+);
+--create employees roles table
+CREATE TABLE EmployeeRole(
+	EmployeeRoleId SERIAL PRIMARY KEY,
+	RoleId int,
+	StartDate date NOT NULL,
+	EndDate date,
+	EmployerId int,
+	Created DATE NOT NULL,
+	Updated DATE NOT NULL,
+	CreatedBy varchar (50) NOT NULL,
+	RowVer timestamp NOT NULL,
+	CONSTRAINT FK_RoleId FOREIGN KEY (RoleId)
+	REFERENCES RoleDescription (RoleId),
+	CONSTRAINT FK_EmployerId FOREIGN KEY (EmployerId)
+	REFERENCES Employer (EmployerId)
+);	
+--creat security roles of employees table
+CREATE TABLE EmployeeSecurityRole(
+	EmployeeSecurityRoleId SERIAL PRIMARY KEY,
+	EmployeeId int,
+	SecurityId int,
+	Created DATE NOT NULL,
+	Updated DATE NOT NULL,
+	CreatedBy varchar (50) NOT NULL,
+	RowVer timestamp NOT NULL,
+	CONSTRAINT FK_EmployeeId FOREIGN KEY (EmployeeId)
+	REFERENCES Employee(EmployeeId),
+	CONSTRAINT FK_SecurityId FOREIGN KEY (SecurityId)
+	REFERENCES SecurityRole (SecurityId)
+);
+--creates skills table
+CREATE TABLE Skill(
+	SkillId SERIAL PRIMARY KEY,
+	SkillName varchar (50) NOT NULL,
+	Created DATE NOT NULL,
+	Updated DATE NOT NULL,
+	CreatedBy varchar (50) NOT NULL,
+	RowVer timestamp NOT NULL
+);
+--creates employees skill table
+CREATE TABLE EmployeeSkill(
+	EmployeeSkillId SERIAL PRIMARY KEY,
+	EmployeeId int,
+	SkillId int,
+	Created DATE NOT NULL,
+	Updated DATE NOT NULL,
+	CreatedBy varchar (50) NOT NULL,
+	RowVer timestamp NOT NULL,
+	CONSTRAINT FK_EmployeeId FOREIGN KEY (EmployeeId)
+	REFERENCES Employee(EmployeeId),
+	CONSTRAINT FK_SkillId FOREIGN KEY (SkillId)
+	REFERENCES Skill (SkillId)
+);commit;

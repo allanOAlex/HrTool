@@ -1,0 +1,567 @@
+﻿@page "/"
+
+@inject HttpClient Http
+@inject IModalService modal
+@inject IConfiguration Config
+@inject IEmployeeService empService
+@inject NotificationService notificationService
+@inject NavigationManager NavigationManager
+
+@using PopUp
+
+<head>
+    @*<link href="~/css/font-awesome/font-awesome.min.css" rel="stylesheet" />
+*@
+   
+    <style>
+        .top {
+            display: grid;
+            column-count: 2;
+            grid-template-columns: 85% 15%;
+        }
+        .addbtn {
+            width: 100;
+            height: 10;
+            margin-right: 10px;
+        }
+        .filter {
+            width: 10%;
+            margin-inline: 12pt;
+            display: grid;
+            column-count: 1;
+        }
+        .filterBttn {
+            width: 100px;
+            height: 50px;
+            margin: 10px;
+            margin-top: 57px;
+        }
+        .table-striped > tbody > tr:nth-child(2n+1) > td, .table-striped > tbody > tr:nth-child(2n+1) > th {
+           background-color: #FFEFFF;
+        }
+
+        
+    </style>
+</head>
+
+
+<PageTitle>EmployeeGrid</PageTitle>
+
+<span>
+    <label class="lblname" style="color:#8522e4;font-size:30px;"><strong>Employees</strong></label>
+    <BSButton Class="btn-sm float-right" style="background-color: #8522e4; width: 150px; color: whitesmoke" Target="addEmployee">Add Employee</BSButton>
+</span>
+<br />
+<br />
+
+
+<BSModal DataId="addEmployee" IsScrollable="true" IsStaticBackdrop="true" IsCentered="true" Size="Size.Large" @ref="addEmpModal">
+    <BSModalHeader style="color:#8522e4;font-size:20px;"><strong>Add Employee</strong> </BSModalHeader>
+		<BSModalContent>
+        <EditForm Model="employeeGridFilterDTO">
+				<DataAnnotationsValidator />
+				<ValidationSummary />
+				<div class="form-group">
+					<BSLabel><strong>First Name: </strong></BSLabel>
+                <ValidationMessage For="@(() => firstname)" />
+                <InputText id="fName" @bind-Value="firstname" class="form-control" />
+					<BSLabel><strong>Last Name: </strong></BSLabel>
+                <ValidationMessage For="@(() => lname)" />
+                <InputText id="lName" @bind-Value="lname" class="form-control" />
+				</div>
+                <div class="form-group">
+                <BSButton Class="btn-sm float-left" Color="BSColor.Secondary" IsOutlined="false" Target="addEmpRole" @onclick="ApplySearchFilter">Search</BSButton>
+                </div>
+			</EditForm>
+            <br />
+            <br />
+            <br />
+            <div class="table-responsive">
+                    <table class="table">
+                        <thead class="thead-dark" style="background-color: #232B2B; color: white;">
+                            <tr>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>THH Company</th>
+                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (EmployeeGridResponse response in _employeeGridResponse)
+                            {
+                                @if (lname == @response.LastName || firstname == @response.FirstName)
+                                {
+                                        <tr>
+                                            <td><a href="/Employee/@response.EmployeeId" style="color: #8522e4"> @response.FirstName</a></td>
+                                            <td>@response.LastName</td>
+                                            <td>@response.EmployerName</td>
+                                            
+                                        </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+		</BSModalContent>
+		<BSModalFooter>
+        <BSButton Class="btn-sm float-right" IsSubmit="true" style="background-color: #8522e4; color: whitesmoke" Target="createNewEmployee">Create New Employee</BSButton>
+        <BSButton Class="btn-sm float-right" Color="BSColor.Dark" IsOutlined="true" Target="addEmployee">Cancel</BSButton>
+		</BSModalFooter>
+	</BSModal>
+
+<BSModal DataId="createNewEmployee" IsScrollable="true" IsStaticBackdrop="true" IsCentered="true" Size="Size.Medium" @ref="createNewEmpModal">
+    <BSModalHeader style="color:#8522e4;font-size:20px;"><strong>Create New Employee</strong> </BSModalHeader>
+    <BSModalContent>
+        <EditForm Model="empRequest">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <BSLabel><strong>First Name: </strong></BSLabel>
+            <ValidationMessage For="@(() => empRequest.FirstName)" />
+            <InputText id="firstName" @bind-Value="empRequest.FirstName" class="form-control" />
+
+            <BSLabel><strong>Last Name: </strong></BSLabel>
+            <ValidationMessage For="@(() => empRequest.LastName)" />
+            <InputText id="lastName" @bind-Value="empRequest.LastName" class="form-control" />
+
+            <BSLabel><strong>Email: </strong></BSLabel>
+            <ValidationMessage For="@(() => empRequest.Email)" />
+            <InputText id="email" @bind-Value="empRequest.Email" class="form-control" />
+
+            <BSLabel><strong>Phone Number: </strong></BSLabel>
+            <ValidationMessage For="@(() => empRequest.PhoneNumber)" />
+            <InputText id="phone" @bind-Value="empRequest.PhoneNumber" class="form-control" />
+
+            <BSLabel><strong>Picture Url: </strong></BSLabel>
+            <ValidationMessage For="@(() => empRequest.PictureUrl)" />
+            <InputText id="picUrl" @bind-Value="empRequest.PictureUrl" class="form-control" />
+
+            <BSLabel><strong>Address: </strong></BSLabel>
+            <ValidationMessage For="@(() => empRequest.Address)" />
+            <InputText id="address" @bind-Value="empRequest.Address" class="form-control" />
+
+            <BSLabel><strong>Address 2: </strong></BSLabel>
+            <ValidationMessage For="@(() => empRequest.Address2)" />
+            <InputText id="address2" @bind-Value="empRequest.Address2" class="form-control" />
+
+            <BSLabel><strong>City: </strong></BSLabel>
+            <ValidationMessage For="@(() => empRequest.City)" />
+            <InputText id="city" @bind-Value="empRequest.City" class="form-control" />
+
+            <BSLabel><strong>Zip: </strong></BSLabel>
+            <ValidationMessage For="@(() => empRequest.Zip)" />
+            <InputText id="zip" @bind-Value="empRequest.Zip" class="form-control" />
+
+            <BSLabel><strong>State: </strong></BSLabel>
+            <ValidationMessage For="@(() => empRequest.EmployeeState)" />
+            <InputText id="state" @bind-Value="empRequest.EmployeeState" class="form-control" />
+        </EditForm>
+    </BSModalContent>
+    <BSModalFooter>
+        <BSButton Class="btn-sm float-right" Color="BSColor.Dark" IsOutlined="true" Target="createNewEmployee">Cancel</BSButton>
+        <BSButton Class="btn-sm float-right" IsSubmit="true" style="background-color: #8522e4; color: whitesmoke" @onclick="PostEmployee">Save</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+
+<div style="display:flex; height: 120px">
+    <div class="filter">
+        <BSLabel style="width=20%">Name </BSLabel >
+        <BSInput style="margin-top: 2px" InputType="InputType.Text" placeholder="name" @bind-Value="lastname" />
+    </div>
+    <div class="filter">
+        <BSLabel style="width=20%">Company: </BSLabel>
+        <BSInput InputType="InputType.Text"  @bind-Value="company"/>
+    </div>
+    <!--input skill to have thre texts inputs-->
+   
+        <div class="filter">
+            <BSLabel style="width=20%">Skill: </BSLabel>
+            <BSInput InputType="InputType.Text" placeholder="Skill" @bind-Value="skill1"/>
+        </div>
+         @if (show)
+        {
+            <div class="filter">
+                <BSLabel style="width=20%">Skill: </BSLabel>
+                <BSInput InputType="InputType.Text" placeholder="Skill" @bind-Value="skill2"/>
+               
+            </div>
+        }
+        @if (shows)
+        {
+            <div class="filter">
+                <BSLabel style="width=20%">Skill: </BSLabel>
+                <BSInput InputType="InputType.Text" placeholder="Skill" @bind-Value="skill3"/>
+            </div>
+        }
+     
+
+      <!--input skill to have threE texts inputs-->
+        @if(skillFilterStatus != 0)
+        {
+            <div class="filterBttn">
+                @if(minus)
+                {
+                    <BSButton style="background-color: #ed1c24; color: white" @onclick="FilterMinus"><i class="oi oi-minus"></i></BSButton>
+                }
+            </div>   
+        }
+
+
+        <div class="filterBttn">
+            <BSButton Class="btn-sm" style="background-color: #8522e4; color: white; width: 130px; " @onclick="FilterClick"><i class="oi oi-plus">&nbsp;&nbsp;Add Another</i></BSButton>
+            </div>
+
+        <div class="filterBttn">
+            <BSButton Class="btn-sm float-right" @onclick="ApplyFilter" style="background-color: #8522e4; width: 60px; color: white">Apply</BSButton>
+        </div>
+        <div class="filterBttn">
+            @if(filtered)
+            {
+                <BSButton Class="btn-sm float-right" style="background-color: #ed1c24; width: 50px; color: white" @onclick="ClearFilter">Reset</BSButton>
+            }
+        </div>
+</div>
+
+
+
+<div class="table-responsive">
+    <BSTable class="table border table-stripped" IsStriped="true" style="border:1px solid black;">
+        <thead class="thead-dark" style="background-color: #232B2B; color: white; border:1px solid black;">
+            <tr>
+                <th style="width:12%">Name</th>
+                <th style="width:12%">THH Company</th>
+                <th style="width:40%">Skills</th>
+                <th style="width:12%">Education</th>
+                <th style="width:12%">Certifications</th>
+                <th style="width:12%">Previous Employers</th>
+            </tr>
+        </thead>
+        <tbody>
+           @foreach(EmployeeGridResponse response in _employeeGridResponse)
+            {
+                <tr style="border:2px solid grey;">
+                    <td><a href="/Employee/@response.EmployeeId" style="color: #8522e4"> @response.FirstName @response.LastName </a></td>
+                    <td>@response.EmployerName</td>
+                    <td>@response.SkillName</td>
+                    <td></td>
+                    <td>@response.CertificateName</td>
+                    <td></td>
+            </tr>
+            }
+        </tbody>
+    </BSTable>
+</div>
+
+
+
+@code {
+
+    #region Allan
+
+    [CascadingParameter] public IModalService Modal { get; set; }
+
+    public EmployeeGridResponse empGridResponse = new();
+    EmployeeRequest empRequest = new();
+    public GSG.Model.Employee employee = new();
+
+    BSModal? addEmpModal = new BSModal();
+    BSModal? createNewEmpModal = new BSModal();
+
+    public static string userMessageSummary = string.Empty;
+    public static string userMessageDetail = string.Empty;
+
+    int value = 1;
+
+    NotificationMessage message = new NotificationMessage
+    {
+            Severity = NotificationSeverity.Success,
+            Summary = "Success!",
+            Detail = string.Empty,
+            Duration = 20000
+    };
+
+    #endregion
+
+
+    private IEnumerable<EmployeeGridResponse> _employeeGridResponse = new List<EmployeeGridResponse>();
+    private EmployeeFilterDTO employeeGridFilterDTO = new EmployeeFilterDTO();
+
+    private int skillFilterStatus = 0;
+    private string company = string.Empty;
+    private bool filtered;
+    private bool show;
+    private bool shows;
+    private bool minus;
+
+    private string skill3 = string.Empty;
+    private string skill1 = string.Empty;
+    private string skill2 = string.Empty;
+    private string[] skill = new string[3] { string.Empty, string.Empty, string.Empty };
+
+
+    private string baseUrl = string.Empty;
+    private string getEmployeesfull = string.Empty;
+
+    private string firstname = string.Empty;
+    private string lastname = string.Empty;
+
+    private string lname = string.Empty;
+    private string Email = string.Empty;  
+    private string Phone = string.Empty;
+    private string Address = string.Empty;
+
+
+    private string Address2 = string.Empty;
+    private string City = string.Empty;
+    private string Zip = string.Empty;
+    private string EmployeeState = string.Empty;
+
+
+    public void FilterClick()
+    {  
+        minus = true;
+
+        if (skill1 !="")
+        {
+            show = true;          
+        }
+        if (skill2 !="")
+        {
+            shows = true;           
+        }
+        if(skillFilterStatus < 3)
+            skillFilterStatus++;
+        Console.WriteLine("+");
+
+    }
+
+    public void FilterMinus()
+    {
+        if (show == true && shows == true)
+        { shows = false;
+            minus = true;
+
+        }
+        if (show==true && shows==false)
+        { minus = true; 
+            show = false;
+            skill3 = string.Empty;
+        }
+        if (show==false && shows==false)
+        { //minus = false; 
+            show = false;
+            skill3 = string.Empty;
+            skill2 = string.Empty;
+        }
+
+
+        if (skillFilterStatus > 0)
+            skillFilterStatus--;
+        Console.WriteLine("-");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {    
+        await base.OnInitializedAsync();
+        filtered = false;
+        skill1 = string.Empty;
+        skill2=string.Empty;
+        skill3 = string.Empty;
+        shows=false;
+        show = false;
+       
+        employeeGridFilterDTO = new EmployeeFilterDTO();
+
+        lastname = string.Empty;
+        company = string.Empty;
+        skill = SkillFilters();
+
+
+
+        try
+        {
+            var response = await empService.GetEmployeesFull();
+            if (response.Success)
+            {
+                _employeeGridResponse = response.Body;
+            }
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    private async void ApplyFilter()
+    {
+
+        employeeGridFilterDTO.LastName = new[] { lastname }; //reference this from the razor
+        employeeGridFilterDTO.EmployerName = new[] { company };
+        //employeeGridFilterDTO.SkillName =  new[] { skill };
+        employeeGridFilterDTO.SkillName = SkillFilters(); 
+
+        filtered = true;
+
+
+        // Console.WriteLine(lastname+"-"+company+"-"+skill[0]+"-"+skill[1]+"-"+skill[2]);
+
+        var keyValueContent = employeeGridFilterDTO.ToKeyValue();
+        var formUrlEncodedContent = new FormUrlEncodedContent(keyValueContent);
+        var url = await formUrlEncodedContent.ReadAsStringAsync();
+        try
+        {
+            var responseBody = await Http.GetFromJsonAsync<ResponseBody<List<EmployeeGridResponse>>>($"api/employee/full?{url}");
+            if(responseBody.Success)
+                _employeeGridResponse = responseBody.Body;
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        } 
+        StateHasChanged();
+    }
+
+    #region Preston Methods
+
+    private async void ApplySearchFilter()
+    {  
+
+        employeeGridFilterDTO.LastName = new[] { lname }; //reference this from the razor
+        employeeGridFilterDTO.FirstName = new[] { firstname };
+
+        filtered = true;
+
+        var keyValueContent = employeeGridFilterDTO.ToKeyValue();
+        var formUrlEncodedContent = new FormUrlEncodedContent(keyValueContent);
+        var url = await formUrlEncodedContent.ReadAsStringAsync();
+        try
+        {
+            var responseBody = await Http.GetFromJsonAsync<ResponseBody<List<EmployeeGridResponse>>>($"api/employee/full?{url}");
+            if(responseBody.Success)
+                _employeeGridResponse = responseBody.Body;
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        } 
+        StateHasChanged();
+    }
+
+    private async void PostEmployee()
+    {
+        var createEmployeerequest = new EmployeeRequest
+        {
+            FirstName = empRequest.FirstName, //reference this from the razor
+            LastName = empRequest.LastName,
+            Email = empRequest.Email,
+            PhoneNumber = empRequest.PhoneNumber,
+            PictureUrl = empRequest.PictureUrl,
+            Address = empRequest.Address,
+            Address2 = empRequest.Address2,
+            City = empRequest.City,
+            Zip = empRequest.Zip,
+            EmployeeState = empRequest.EmployeeState
+
+        };
+
+        var httpClient = new HttpClient();
+
+        var keyValueContent = employee.ToKeyValue();
+
+        try
+        {
+            var response = await empService.CreateNewEmployee(createEmployeerequest);
+            if (response.ReponseCode != StatusCodes.Status200OK && response.Success != true)
+            {
+                userMessageSummary = "Failed";
+                userMessageDetail = response.Message;
+
+                message.Severity = NotificationSeverity.Error;
+                message.Summary = userMessageSummary;
+                message.Detail = userMessageDetail;
+
+                await HideModal(createNewEmpModal);
+
+                ShowNotification(message);
+
+                await ShowModal(createNewEmpModal);
+
+                return;
+            }
+
+            userMessageDetail = $"Employee Added Successfully!";
+
+            await HideModal(createNewEmpModal);
+
+            message.Detail = userMessageDetail;
+
+            ShowNotification(message);
+
+            
+
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+
+        
+        StateHasChanged();
+        
+    }
+
+    public void Clear()
+    {
+        firstname = "";
+        lastname = "";
+        lastname = "";
+        Email = "";
+        Phone = "";
+        Address = "";
+        Address2 = "";
+        City = "";
+        Zip = "";
+        EmployeeState = "";
+    }
+
+    #endregion
+
+
+    private async Task ShowModal(BSModal modal)
+    {
+        await modal.ShowAsync();
+    }
+
+    private async Task HideModal(BSModal modal)
+    {
+        await modal.HideAsync();
+    }
+
+    void ShowNotification(NotificationMessage message)
+    {
+        notificationService.Notify(message);
+    }
+
+    private async Task ClearFilter()
+    {   
+        await OnInitializedAsync();
+        
+       
+    }
+
+    private string[] SkillFilters()
+    {
+        string skillset = skill1+","+ skill2 +","+skill3;       
+        string[] skillsets = skillset.Split(',').ToArray();
+        List<string> filtersForSkill = new List<string>();
+        foreach(string ski in skillsets)
+        {
+            if(ski is not null && ski.Length > 2)
+            {
+                filtersForSkill.Add(ski);
+            }
+        }
+        return filtersForSkill.ToArray();
+    }
+
+}

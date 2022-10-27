@@ -1,0 +1,149 @@
+﻿@page "/Management/ManageRoles/"
+@using GSG.Model.DTO.Filters
+@inject HttpClient Http
+
+<head>
+    <style>
+        .filter {
+            width: 10%;
+            display: grid;
+            column-count: 1;
+            margin: 20px;
+        }
+
+        .filterBttn {
+            width: 50px;
+            height: 50px;
+            margin: 10px;
+            margin-top: 51px;
+        }
+
+        .table-striped > tbody > tr:nth-child(2n+1) > td, .table-striped > tbody > tr:nth-child(2n+1) > th {
+           background-color: #f7f0ff;
+        }
+}
+    </style>
+</head>
+
+
+<PageTitle>Role</PageTitle>
+
+<div >
+    <h1 Style="font-weight-absolute">Manage Roles</h1>
+</div>
+
+<!--Input fields for filtering-->
+<div style="display:flex">
+    <div class="filter">
+        <BSLabel style="width=20%">Role: </BSLabel>
+        <BSInput InputType="InputType.Text" placeholder="Role" @bind-Value="role[0]"/>
+    </div>
+        @for (int i = 0; i < roleFilterStatus; i++)
+        {
+            <div class="filter">
+                <BSLabel style="width=20%">Role: </BSLabel>
+                <BSInput InputType="InputType.Text" placeholder="Role" @bind-Value="role[i]"/>
+            </div>
+        }
+        @if(roleFilterStatus != 0)
+        {
+                <div class="filterBttn">
+                <BSButton style="background-color: #ed1c24;" @onclick="FilterMinus"><i class="oi oi-minus" style="color: white" ></i></BSButton>
+            </div>        
+        }
+        @if(roleFilterStatus < 2)
+        {
+            <div class="filterBttn">
+                <BSButton style="background-color: #8522e4;" @onclick="FilterClick"><i class="oi oi-plus" style="color: white" ></i></BSButton>
+            </div>
+        }
+    <div class="filterBttn">
+        <BSButton @onclick="ApplyFilter" style="background-color: #8522e4; color: white">Apply</BSButton>
+    </div>
+    <div class="filterBttn">
+        @if(filtered)
+        {
+            <BSButton style="background-color: #ed1c24; color: white" @onclick="ClearFilter">Clear</BSButton>
+        }
+    </div>
+</div>
+
+
+<BSTable IsStriped=true>
+    <BSTHead>
+        <BSTR Color="BSColor.Dark" style="color: white">
+            <BSTD>Role</BSTD>
+        </BSTR>
+    </BSTHead>
+    <BSTBody>
+        @foreach(RoleResponse response in _roleResponse)
+        {
+            <BSTR>
+                <BSTD>@response.RoleName</BSTD>
+            </BSTR>
+        }
+    </BSTBody>
+</BSTable>
+
+
+
+@code {
+    private IEnumerable<RoleResponse> _roleResponse;
+    private RoleFilterDTO _roleFilterDTO;
+
+    private int roleFilterStatus= 0;
+    private string[] role = new string[3]{string.Empty,string.Empty,string.Empty};
+    public bool filtered;
+
+    public void FilterClick()
+    {
+        if(roleFilterStatus < 3)
+            roleFilterStatus++;
+        Console.WriteLine("+");
+    }
+
+    public void FilterMinus()
+    {
+        if (roleFilterStatus > 0)
+            roleFilterStatus--;
+        Console.WriteLine("-");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _roleFilterDTO = new RoleFilterDTO();
+        var roleResponse = new List<RoleResponse>();
+        await base.OnInitializedAsync();
+
+        var keyValueContent = _roleFilterDTO.ToKeyValue();
+        var formUrlEncodedContent = new FormUrlEncodedContent(keyValueContent);
+        var urlEncodedString = await formUrlEncodedContent.ReadAsStringAsync();
+
+        try
+        {
+            var response = await Http.GetFromJsonAsync<ResponseBody<List<RoleResponse>>>("api/role?" + urlEncodedString);
+            if (response.Success)
+                roleResponse = response.Body;
+        }
+        catch(AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+
+        _roleResponse = roleResponse;
+    }
+
+    private void ApplyFilter()
+    {
+        _roleFilterDTO.RoleName = new[] { role[0], role[1], role[2] }; 
+
+        _roleResponse = _roleResponse.Where(row => _roleFilterDTO.RoleName.Contains(row.RoleName));
+        filtered = true;
+    }
+
+    public async Task ClearFilter()
+    {
+        await OnInitializedAsync();
+        filtered = false;
+    }
+}

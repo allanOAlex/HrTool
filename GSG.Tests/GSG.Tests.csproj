@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="6.4.0" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="coverlet.msbuild" Version="3.1.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="6.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
+    <PackageReference Include="NUnit" Version="3.13.2" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.0.0" />
+    <PackageReference Include="coverlet.collector" Version="3.1.0" />
+    <PackageReference Include="Testcontainers" Version="2.1.0" />
+    <PackageReference Include="TestContainers.Container.Database.PostgreSql" Version="1.5.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\API\GSG.API\GSG.API.csproj" />
+    <ProjectReference Include="..\API\GSG.Service\GSG.Service.csproj" />
+    <ProjectReference Include="..\GSG.DBMigration\GSG.DBMigration.csproj" />
+    <ProjectReference Include="..\GSG.Model\GSG.Model.csproj" />
+    <ProjectReference Include="..\GSG.Repository.EF.InMemory\GSG.Repository.EF.InMemory.csproj" />
+    <ProjectReference Include="..\GSG.Repository.EF.PostgeSQL\GSG.Repository.EF.PostgeSQL.csproj" />
+    <ProjectReference Include="..\GSG.Repository.EF\GSG.Repository.EF.csproj" />
+    <ProjectReference Include="..\GSG.Repository\GSG.Repository.csproj" />
+    <ProjectReference Include="..\GSG.Shared\GSG.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="TestResults\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="TestResults\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="TestResults\**" />
+  </ItemGroup>
+
+</Project>

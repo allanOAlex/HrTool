@@ -1,0 +1,152 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+@inject NavigationManager Navigation
+@inject SignOutSessionStateManager SignOutManager
+@inject NavigationManager NavigationManager
+
+
+<head>
+	<style>
+		p {font-size:0;background-color:#8533e4; margin: 0rem; display:flex; align-self:center; width:contain; }
+		half { width:50%; font-size:12pt; color:white}
+		half.align-right { text-align:right; font-size:12pt}
+		previous {background-color:#8533e4; margin: 0rem; display:flex; align-self:center;}
+	</style>
+</head>
+
+<p IsFixedTop="true">
+	<half style="float:left">
+		<img src="/Assets/THHLogo.png" style=" margin: 0rem; width:15%" @onclick="GoToEmployeesGrid" />
+	</half>
+	<half style="float:right">
+		<AuthorizeView>
+			<Authorized>
+				<half style="float:right; display:flex">
+					<a style="font-size:14pt; color:white;
+							align-self:center; text-align: right;" href="Employee/Profile/4">
+						Hello, @context.User.Identity?.Name!
+					</a>
+					<a>
+						<button class="nav-link btn btn-link" style="color:white" @onclick="BeginLogout">Log out</button>
+					</a>
+				</half>
+			</Authorized>
+			<NotAuthorized>
+				<a href="authentication/login" style="width: contain; float:right; color:white; font-size:14pt">Log in</a>
+			</NotAuthorized>
+		</AuthorizeView>
+	</half>
+</p>
+
+
+@*<p  class="previous" IsFixedTop="true">
+	<half>
+		<img src="/Assets/THHLogo.PNG" style=" margin: 0rem; width:15%" />
+	</half>
+
+	<img src="/Assets/Purple.png" style="width: 65%" />
+	<img src="/Assets/Purple.png" style="width:10%" />
+	<div>
+		<a>
+			<AuthorizeView>
+				<Authorized>
+					<a style="font-size:14pt; color:white;
+								align-self:center; text-align: right; width:contain" href="Employee/Profile">
+						Hello, @context.User.Identity?.Name!
+					</a>
+					<a>
+						<button class="nav-link btn btn-link" style="color:white" @onclick="BeginLogout">Log out</button>
+					</a>
+				</Authorized>
+				<NotAuthorized>
+					<a href="authentication/login" style="width: contain; float:right; color:white; font-size:14pt">Log in</a>
+				</NotAuthorized>
+			</AuthorizeView>
+		</a>
+	</div>
+</p>*@
+
+
+
+<BSNavbar IsDark="true" Expand="Size.Large" Color="BSColor.Dark" IsResponsive="true">
+
+	<BSContainer Container="Container.Fluid">
+
+		<BSNavbarBrand>Resume Management</BSNavbarBrand>
+
+		<BSButton Color="BSColor.Dark" IsOutlined="true" style="color: White">
+			<NavLink class="nav-link" href="/" style="color: WHite">
+				Employees
+			</NavLink>
+		</BSButton>
+		<br />
+		<BSCollapse IsInNavbar="true">
+			<Toggler>
+				<BSNavbarToggle />
+			</Toggler>
+			<Content>
+				<BSNav>
+					<BSNavItem IsDropdown="true">
+						<BSDropdown IsOutlined="true" style="color: White">
+							<Toggler>
+								<BSToggle IsNavLink="true">Admin</BSToggle>
+							</Toggler>
+							<Content>
+								<BSDropdownItem>
+									<NavLink class="nav-link" href="Management/ManageCertificates" style="color: black">
+										Manage Certificates
+									</NavLink>
+								</BSDropdownItem>
+								<BSDropdownItem>
+									<NavLink class="nav-link" href="Management/ManageEmployers" style="color: black">
+										Manage Employers
+									</NavLink>
+								</BSDropdownItem>
+								<BSDropdownItem>
+									<NavLink class="nav-link" href="Management/ManageProjects" style="color: black">
+										Manage Projects
+									</NavLink>
+								</BSDropdownItem>
+								<BSDropdownItem>
+									<NavLink class="nav-link" href="Management/ManageRoles" style="color: black">
+										Manage Roles
+									</NavLink>
+								</BSDropdownItem>
+								<BSDropdownItem>
+									<NavLink class="nav-link" href="Management/ManageSkills" style="color: black">
+										Manage Skills
+									</NavLink>
+								</BSDropdownItem>
+								<BSDropdownItem>
+									<NavLink class="nav-link" href="Employee/EntityAdder" style="color: black">
+										Manage User Access
+									</NavLink>
+								</BSDropdownItem>
+							</Content>
+						</BSDropdown>
+					</BSNavItem>
+				</BSNav>
+			</Content>
+		</BSCollapse>
+	</BSContainer>
+</BSNavbar>
+@code {
+	void post(string name)
+	{
+
+	}
+
+	public void GoToEmployeesGrid(){
+
+		NavigationManager.NavigateTo("/");
+	}
+
+	@code {
+		private async Task BeginLogout(MouseEventArgs args)
+		{
+			await SignOutManager.SetSignOutState();
+			Navigation.NavigateTo("authentication/logout");
+		}
+	}
+}

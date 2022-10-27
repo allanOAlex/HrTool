@@ -1,0 +1,153 @@
+﻿@page "/Management/ManageSkills/"
+@using GSG.Model.DTO.Filters
+@inject HttpClient Http
+
+<head>
+    <style>
+        .filter {
+            width: 10%;
+            display: grid;
+            column-count: 1;
+            margin: 20px;
+        }
+
+        .filterBttn {
+            width: 50px;
+            height: 50px;
+            margin: 10px;
+            margin-top: 51px;
+        }
+
+        .table-striped > tbody > tr:nth-child(2n+1) > td, .table-striped > tbody > tr:nth-child(2n+1) > th {
+           background-color: #f7f0ff;
+        }
+}
+    </style>
+</head>
+
+
+<PageTitle>Skill</PageTitle>
+
+<div >
+    <h1 Style="font-weight-absolute">Manage Skills</h1>
+</div>
+
+<!--Input fields for filtering-->
+<div style="display:flex">
+    <div class="filter">
+        <BSLabel style="width=20%">Skill: </BSLabel>
+        <BSInput InputType="InputType.Text" placeholder="Skill" @bind-Value="skill[0]"/>
+    </div>
+        @for (int i = 0; i < skillFilterStatus; i++)
+        {
+            <div class="filter">
+                <BSLabel style="width=20%">Skill: </BSLabel>
+                <BSInput InputType="InputType.Text" placeholder="Skill" @bind-Value="skill[i]"/>
+            </div>
+        }
+        @if(skillFilterStatus != 0)
+        {
+                <div class="filterBttn">
+                <BSButton style="background-color: #ed1c24;" @onclick="FilterMinus"><i class="oi oi-minus" style="color: white" ></i></BSButton>
+            </div>        
+        }
+        @if(skillFilterStatus < 2)
+        {
+            <div class="filterBttn">
+                <BSButton style="background-color: #8522e4;" @onclick="FilterClick"><i class="oi oi-plus" style="color: white" ></i></BSButton>
+            </div>
+        }
+    <div class="filterBttn">
+        <BSButton @onclick="ApplyFilter" style="background-color: #8522e4; color: white">Apply</BSButton>
+    </div>
+    <div class="filterBttn">
+        @if(filtered)
+        {
+            <BSButton style="background-color: #ed1c24; color: white" @onclick="ClearFilter">Clear</BSButton>
+        }
+    </div>
+</div>
+
+
+<BSTable IsStriped=true>
+    <BSTHead>
+        <BSTR Color="BSColor.Dark" style="color: white">
+            <BSTD>ID</BSTD>
+            <BSTD>Skill</BSTD>
+        </BSTR>
+    </BSTHead>
+    <BSTBody>
+        @foreach(SkillResponse response in _skillsResponse)
+        {
+            <BSTR>
+                <BSTD>@response.SkillId</BSTD>
+                <BSTD>@response.SkillName</BSTD>
+            </BSTR>
+        }
+    </BSTBody>
+</BSTable>
+
+
+
+@code {
+    private IEnumerable<SkillResponse> _skillsResponse = new List<SkillResponse>();
+    private SkillFilterDTO _skillsFilterDTO;
+
+    private int skillFilterStatus= 0;
+    private string[] skill = new string[3]{string.Empty,string.Empty,string.Empty};
+    private bool filtered;
+
+    public void FilterClick()
+    {
+        if(skillFilterStatus < 3)
+            skillFilterStatus++;
+        Console.WriteLine("+");
+    }
+
+    public void FilterMinus()
+    {
+        if (skillFilterStatus > 0)
+            skillFilterStatus--;
+        Console.WriteLine("-");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _skillsFilterDTO = new SkillFilterDTO();
+        var skillsResponse = new List<SkillResponse>();
+        await base.OnInitializedAsync();
+        filtered = false;
+        //string url = HttpUtility.HtmlEncode(_skillsFilterDTO);
+
+        var keyValueContent = _skillsFilterDTO.ToKeyValue();
+        var formUrlEncodedContent = new FormUrlEncodedContent(keyValueContent);
+        var urlEncodedString = await formUrlEncodedContent.ReadAsStringAsync();
+
+        try
+        {
+            Console.WriteLine(urlEncodedString);
+            var response = await Http.GetFromJsonAsync<ResponseBody<List<SkillResponse>>>("api/skill?" + urlEncodedString);
+            if(response.Success)
+                skillsResponse = response.Body;
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+        _skillsResponse = skillsResponse;
+    }
+
+    private void ApplyFilter()
+    {
+        _skillsFilterDTO.SkillName = new[] { skill[0],skill[1],skill[2] }; //reference this from the razor
+
+        _skillsResponse = _skillsResponse.Where(row => _skillsFilterDTO.SkillName.Contains(row.SkillName));
+        filtered = true;
+    }
+
+    private async Task ClearFilter()
+    {
+        await OnInitializedAsync();
+        filtered = false;
+    }
+}

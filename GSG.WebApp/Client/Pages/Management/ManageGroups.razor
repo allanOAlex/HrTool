@@ -1,0 +1,91 @@
+﻿@page "/Management/ManageGroups"
+
+@inject DialogService DialogService
+
+<PageTitle>Manage Groups</PageTitle>
+<div style="display: flex; flex-direction: row">
+    <h1 Style="font-weight-absolute">Manage Skills</h1>
+    <BSButton IsOutlined="true" style="margin-left: 52rem"><NavLink class="nav-link" href="Management/ManageSkills" style="color: white; background-color: #8522e4">Back to Skills</NavLink></BSButton>
+    <BSButton IsOutlined="true"><NavLink class="nav-link" href="" style="color: white; background-color: #8522e4">Add Group</NavLink></BSButton>
+</div>
+
+
+<RadzenDataGrid Data="@data" TItem="IDictionary<string, object>"
+                         AllowFiltering="true" FilterMode="FilterMode.SimpleWithMenu" AllowPaging="true" AllowSorting="true">
+                <Columns>
+                    @foreach(var column in columns)
+                    {
+                            <RadzenDataGridColumn TItem="IDictionary<string, object>" Title="@column.Key" Type="column.Value"
+                              Property="@GetColumnPropertyExpression(column.Key, column.Value)" >
+                                <Template>
+                                    @context[@column.Key]
+                                </Template>
+                            </RadzenDataGridColumn>
+                    }
+                    <RadzenDataGridColumn TItem="IDictionary<string, object>" Title="Modify">
+                                <Template>
+                                    <BSButton style="background-color: #8522e4; color: white" OnClick=@EditSkill><i class="oi oi-pencil"></i></BSButton>
+                                    <BSButton style="background-color: #8522e4; color: white" OnClick=@EditSkill><i class="oi oi-loop"></i></BSButton>
+                                    <BSButton style="background-color: #8522e4; color: white" OnClick=@EditSkill><i class="oi oi-trash"></i></BSButton>
+                                </Template>
+                            </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+
+
+
+
+
+
+
+@code {
+    public IEnumerable<IDictionary<string, object>> data { get; set; }
+
+    public IDictionary<string, Type> columns { get; set; }
+
+    public string GetColumnPropertyExpression(string name, Type type)
+    {
+        var expression = $@"it[""{name}""].ToString()";
+        return type == typeof(int) ? $"int.Parse({expression})" : expression;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        columns = new Dictionary<string, Type>()
+        {
+            { "Skill Group", typeof(string) },
+            { "Description", typeof(string) }
+        };
+
+        data = Enumerable.Range(0, 100).Select(i =>
+        {
+            var row = new Dictionary<string, object>();
+
+            foreach (var column in columns)
+            {
+                row.Add(column.Key, column.Value == typeof(int) ? i : $"{column.Key}{i}");
+            }
+
+            return row;
+        });
+    }
+}
+@code{
+    async Task EditSkill()
+    {
+     await DialogService.OpenAsync("Edit Skill", ds =>
+        @<RadzenCard>
+          <div>
+            <p class="mb-4">Skill ID <b>1</b></p>
+            <div class="row">
+                <div class="col">
+                    <RadzenButton Text="Ok" Click="() => ds.Close(true)" Class="mr-1" Style="width: 80px;" />
+                    <RadzenButton Text="Cancel" Click="() => ds.Close(false)" ButtonStyle="ButtonStyle.Secondary" Class="mr-1" />
+                </div>
+            </div>
+        </div>
+        </RadzenCard>);
+    }
+}
